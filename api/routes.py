@@ -90,15 +90,15 @@ def register_routes(app, socketio):
         next_url = request.form.get('next') or url_for('index')
 
         if not username or not password:
-            return render_template('login.html', error='Vui lòng nhập username và mật khẩu')
+            return render_template('login.html', error='Vui lÃ²ng nháº­p username vÃ  máº­t kháº©u')
 
         db = get_db()
         try:
             user = db.query(User).filter_by(username=username).first()
             if not user or not check_password_hash(user.password_hash, password):
-                return render_template('login.html', error='Tên đăng nhập hoặc mật khẩu không đúng')
+                return render_template('login.html', error='TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng')
             if user.role == 'student':
-                return render_template('login.html', error='Tài khoản sinh viên không được truy cập web dashboard. Dùng app mobile.')
+                return render_template('login.html', error='TÃ i khoáº£n sinh viÃªn khÃ´ng Ä‘Æ°á»£c truy cáº­p web dashboard. DÃ¹ng app mobile.')
             login_user(user)
             if user.role == 'manager':
                 return redirect(url_for('manager_dashboard'))
@@ -590,9 +590,9 @@ def register_routes(app, socketio):
         db = get_db()
         try:
             plate_label = case(
-                (ImproperParkingLog.plate_text.is_(None), 'Không nhận dạng'),
-                (ImproperParkingLog.plate_text == '', 'Không nhận dạng'),
-                (ImproperParkingLog.plate_text == '---', 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text.is_(None), 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text == '', 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text == '---', 'KhÃ´ng nháº­n dáº¡ng'),
                 else_=ImproperParkingLog.plate_text,
             )
             plate_counts = (
@@ -607,7 +607,7 @@ def register_routes(app, socketio):
             )
             result = []
             for label, count in plate_counts:
-                if label == 'Không nhận dạng':
+                if label == 'KhÃ´ng nháº­n dáº¡ng':
                     events_q = db.query(ImproperParkingLog).filter(
                         (ImproperParkingLog.plate_text.is_(None))
                         | (ImproperParkingLog.plate_text == '')
@@ -728,7 +728,7 @@ def register_routes(app, socketio):
             rows = []
             for log in logs:
                 ts = log.timestamp.strftime('%d/%m/%Y %H:%M:%S') if log.timestamp else ''
-                direction = 'Vào' if log.direction == 'IN' else 'Ra'
+                direction = 'VÃ o' if log.direction == 'IN' else 'Ra'
                 rows.append([ts, log.plate_text or '', direction, log.image_path or ''])
             return _make_csv_response(header, rows, 'gate_logs.csv')
         except Exception as e:
@@ -745,7 +745,7 @@ def register_routes(app, socketio):
             rows = []
             for l in logs:
                 ts = l.timestamp.strftime('%d/%m/%Y %H:%M:%S') if l.timestamp else ''
-                event = 'Ngoài slot' if l.event_type == 'outside' else 'Lấn ô'
+                event = 'NgoÃ i slot' if l.event_type == 'outside' else 'Láº¥n Ã´'
                 rows.append([ts, l.plate_text or '', event, l.image_path or ''])
             return _make_csv_response(header, rows, 'improper_parking_logs.csv')
         except Exception as e:
@@ -759,7 +759,7 @@ def register_routes(app, socketio):
         header = ['Slot', 'Trang_thai', 'Bien_so']
         rows = []
         for s in slots:
-            status = 'Có xe' if s.get('status') == 'occupied' else 'Trống'
+            status = 'CÃ³ xe' if s.get('status') == 'occupied' else 'Trá»‘ng'
             plate = s.get('plate') or ''
             rows.append([f"Slot {s.get('slot_number', '')}", status, plate])
         return _make_csv_response(header, rows, 'slot_status.csv')
@@ -769,9 +769,9 @@ def register_routes(app, socketio):
         db = get_db()
         try:
             plate_label = case(
-                (ImproperParkingLog.plate_text.is_(None), 'Không nhận dạng'),
-                (ImproperParkingLog.plate_text == '', 'Không nhận dạng'),
-                (ImproperParkingLog.plate_text == '---', 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text.is_(None), 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text == '', 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text == '---', 'KhÃ´ng nháº­n dáº¡ng'),
                 else_=ImproperParkingLog.plate_text,
             )
             plate_counts = (
@@ -787,7 +787,7 @@ def register_routes(app, socketio):
             header = ['Bien_so', 'So_lan', 'Loai_gan_nhat', 'Anh_gan_nhat']
             rows = []
             for label, count in plate_counts:
-                if label == 'Không nhận dạng':
+                if label == 'KhÃ´ng nháº­n dáº¡ng':
                     latest = (
                         db.query(ImproperParkingLog)
                         .filter(
@@ -808,7 +808,7 @@ def register_routes(app, socketio):
                 event = ''
                 img = ''
                 if latest:
-                    event = 'Ngoài slot' if latest.event_type == 'outside' else 'Lấn ô'
+                    event = 'NgoÃ i slot' if latest.event_type == 'outside' else 'Láº¥n Ã´'
                     img = latest.image_path or ''
                 rows.append([label, count, event, img])
             return _make_csv_response(header, rows, 'frequent_violators.csv')
@@ -817,7 +817,12 @@ def register_routes(app, socketio):
         finally:
             db.close()
 
-    # ── System Health ──────────────────────────────────────────────────────────────
+    # â”€â”€ System Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    @app.route('/health')
+    def health_check():
+        """Simple health check for Docker healthcheck and load balancers."""
+        return jsonify({'status': 'ok', 'service': 'parking-main'}), 200
 
     @app.route('/api/health/detailed')
     def get_detailed_health():

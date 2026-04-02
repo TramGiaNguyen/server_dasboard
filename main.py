@@ -11,10 +11,13 @@ This file initializes the Flask application and starts all services:
 
 Usage:
     python main.py
+    python main.py cleanup --days 30 --dry-run
 """
 
 import os
 import threading
+import click
+from datetime import datetime, timedelta, timezone
 
 # Set environment variable to allow duplicated libraries (must be before imports)
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -32,6 +35,7 @@ from services.parking_detection import process_video_stream
 from services.gate_camera import process_gate_video_stream
 from services.notification_scheduler import _run_notification_scheduler
 from services.reservation_scheduler import start_scheduler as start_reservation_scheduler
+from services.cleanup_service import cleanup_old_records, run_scheduled_cleanup
 
 
 # Ensure all DB tables exist (safe to call multiple times)
@@ -51,6 +55,17 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Register all routes
 register_routes(app, socketio)
+
+
+# ── Cleanup CLI command ────────────────────────────────────────────────────────
+@app.cli.command('cleanup')
+@click.option('--days', default=30, help='Number of days to retain (default: 30)')
+@click.option('--dry-run', is_flag=True, help='Preview what would be deleted without deleting anything')
+def cleanup_cmd(days, dry_run):
+    """Remove database records older than N days and orphaned image files."""
+    from flask import current_app
+    with current_app.app_context():
+        cleanup_old_records(days=days, dry_run=dry_run)
 
 
 # Lazy model — initialized in background so camera sync isn't blocked by YOLO load
@@ -87,6 +102,28 @@ def _run_gate_camera(app, socketio):
             pass
 
 
+def _run_cleanup_scheduler(app, interval_hours=24, run_hour_utc=3):
+    """
+    Background thread: runs data cleanup once per day at a fixed UTC hour.
+
+    On startup, computes how long to wait until the next run time,
+    then re-schedules itself on every subsequent run.
+    """
+    import time
+    while True:
+        now_utc = datetime.now(timezone.utc)
+        # Next run: today at run_hour_utc, or tomorrow if already passed
+        next_run = now_utc.replace(hour=run_hour_utc, minute=0, second=0, microsecond=0)
+        if next_run <= now_utc:
+            next_run += timedelta(days=1)
+        wait_seconds = (next_run - now_utc).total_seconds()
+        print(f"[CLEANUP] Next scheduled run at {next_run.strftime('%Y-%m-%d %H:%M')} UTC (in {wait_seconds/3600:.1f}h)")
+        time.sleep(wait_seconds)
+        with app.app_context():
+            run_scheduled_cleanup(days=30)
+        # Loop immediately computes next time after each run
+
+
 # ── Background service management ────────────────────────────────────────────────
 
 _stop_events = []
@@ -110,9 +147,11 @@ def start_background_services():
     t1 = threading.Thread(target=_run_parking_camera, args=(app, socketio), daemon=True, name="ParkingBG")
     t2 = threading.Thread(target=_run_gate_camera, args=(app, socketio), daemon=True, name="GateBG")
     t3 = threading.Thread(target=_run_notification_scheduler, args=(app,), daemon=True, name="NotifyBG")
+    t4 = threading.Thread(target=_run_cleanup_scheduler, args=(app,), daemon=True, name="CleanupBG")
     t1.start()
     t2.start()
     t3.start()
+    t4.start()
     start_reservation_scheduler(socketio)
 
 

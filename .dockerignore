@@ -1,0 +1,89 @@
+# =============================================================================
+# Docker Build Ignore File
+# Exclude unnecessary files from build context to reduce image size
+# =============================================================================
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+venv
+.venv
+env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.cursor
+
+# Testing
+.coverage
+htmlcov
+.tox
+.nox
+.pytest_cache
+
+# Documentation
+*.md
+!requirements.txt
+docs
+README*
+
+# Docker
+docker-compose*.yml
+.dockerignore
+Dockerfile*
+.docker
+
+# Local development
+.env
+.env.example
+*.log
+*.pot
+*.pyc
+
+# Models (large files - should be mounted or downloaded at runtime)
+static/models/*.pt
+static/models/*.onnx
+
+# Video files
+static/video/*.mp4
+static/video/*.avi
+
+# OCR models
+services/ocr/LicensePlate_OCR_Standalone/models/*.onnx
+
+# Simulator
+simulator/
+
+# Test files
+test/
+
+# Node (if any)
+node_modules
+
+# OS
+.DS_Store
+Thumbs.db

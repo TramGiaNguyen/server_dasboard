@@ -1,0 +1,116 @@
+# =============================================================================
+# Smart Parking System - Docker Compose
+# =============================================================================
+# Services:
+#   1. postgres  - PostgreSQL database
+#   2. parking   - Main Smart Parking application (Dashboard + Camera Detection)
+#   3. backend   - Mobile App API backend
+#
+# Usage:
+#   Development: docker-compose up
+#   Production:  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # 1. PostgreSQL Database
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: parking_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-PARKING_PLATE}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-PARKING_PLATE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parking_network
+
+  # ===========================================================================
+  # 2. Main Smart Parking Application
+  # ===========================================================================
+  parking:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime-cpu
+    container_name: parking_main
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      # Server
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: ${SERVER_PORT:-5001}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-change-me-in-production}
+      # Camera URLs
+      PARKING_RTSP_URL: ${PARKING_RTSP_URL:-rtsp://camera-parking:8554/stream}
+      GATE_RTSP_URL: ${GATE_RTSP_URL:-rtsp://camera-gate:8554/stream}
+      # Detection settings
+      PARKING_USE_HALF_PRECISION: ${PARKING_USE_HALF_PRECISION:-false}
+      PARKING_USE_CLAHE: ${PARKING_USE_CLAHE:-false}
+      # GPU (NVIDIA)
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
+    ports:
+      - "${SERVER_PORT:-5001}:5001"
+    volumes:
+      - ./static/models:/app/static/models:ro
+      - ./static/sound:/app/static/sound:ro
+      - ./services/ocr/LicensePlate_OCR_Standalone/models:/app/services/ocr/LicensePlate_OCR_Standalone/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${NVIDIA_GPU_COUNT:-1}
+              capabilities: [gpu]
+    networks:
+      - parking_network
+
+  # ===========================================================================
+  # 3. Mobile App Backend API
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend_app
+      dockerfile: Dockerfile
+    container_name: parking_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      SECRET_KEY: ${BACKEND_SECRET_KEY:-change-me-in-production}
+      APP_PORT: ${BACKEND_PORT:-5002}
+      FLASK_ENV: ${FLASK_ENV:-production}
+    ports:
+      - "${BACKEND_PORT:-5002}:5002"
+    networks:
+      - parking_network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  parking_network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
