@@ -8,7 +8,8 @@
 #
 # Usage:
 #   Development: docker-compose up
-#   Production:  docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#   Production:  docker-compose up -d
+#   Rebuild:     docker-compose up --build
 # =============================================================================
 
 services:
@@ -22,11 +23,12 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-PARKING_PLATE}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1412}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-PARKING_PLATE}"]
       interval: 10s
@@ -42,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Change to 'runtime-gpu' for GPU support
       target: runtime-cpu
     container_name: parking_main
     restart: unless-stopped
@@ -50,67 +53,99 @@ services:
         condition: service_healthy
     environment:
       # Database
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1412}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      
       # Server
       SERVER_HOST: 0.0.0.0
-      SERVER_PORT: ${SERVER_PORT:-5001}
-      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-change-me-in-production}
-      # Camera URLs
-      PARKING_RTSP_URL: ${PARKING_RTSP_URL:-rtsp://camera-parking:8554/stream}
-      GATE_RTSP_URL: ${GATE_RTSP_URL:-rtsp://camera-gate:8554/stream}
+      SERVER_PORT: 5001
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-smart-parking-dev-secret-change-in-production}
+      
+      # Camera URLs (use your RTSP URLs from .env)
+      PARKING_RTSP_URL: ${PARKING_RTSP_URL}
+      GATE_RTSP_URL: ${GATE_RTSP_URL}
+      
       # Detection settings
-      PARKING_USE_HALF_PRECISION: ${PARKING_USE_HALF_PRECISION:-false}
-      PARKING_USE_CLAHE: ${PARKING_USE_CLAHE:-false}
-      # GPU (NVIDIA)
-      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
-    ports:
-      - "${SERVER_PORT:-5001}:5001"
+      MIN_CONFIDENCE: ${MIN_CONFIDENCE:-0.35}
+      MIN_AREA_SIZE: ${MIN_AREA_SIZE:-1500}
+      MIN_DIMENSION: ${MIN_DIMENSION:-30}
+      
+      # Performance
+      PARKING_USE_HALF_PRECISION: ${PARKING_USE_HALF_PRECISION:-True}
+      PARKING_USE_CLAHE: ${PARKING_USE_CLAHE:-False}
+      PARKING_USE_DETECTION_THREAD: ${PARKING_USE_DETECTION_THREAD:-True}
+      PARKING_USE_ROBUST_RTSP: ${PARKING_USE_ROBUST_RTSP:-True}
+      
+      # Python
+      PYTHONUNBUFFERED: 1
+      KMP_DUPLICATE_LIB_OK: TRUE
     volumes:
-      - ./static/models:/app/static/models:ro
-      - ./static/sound:/app/static/sound:ro
-      - ./services/ocr/LicensePlate_OCR_Standalone/models:/app/services/ocr/LicensePlate_OCR_Standalone/models:ro
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: ${NVIDIA_GPU_COUNT:-1}
-              capabilities: [gpu]
+      - ./static/gate_captures:/app/static/gate_captures
+      - ./static/parking_captures:/app/static/parking_captures
+      - ./static/models:/app/static/models
+      - ./services/ocr/LicensePlate_OCR_Standalone/models:/app/services/ocr/LicensePlate_OCR_Standalone/models
+    ports:
+      - "5001:5001"
     networks:
       - parking_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    # Uncomment below for GPU support (requires NVIDIA Docker runtime)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
 
   # ===========================================================================
-  # 3. Mobile App Backend API
+  # 3. Mobile App Backend
   # ===========================================================================
   backend:
     build:
-      context: ./backend_app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend_app/Dockerfile
     container_name: parking_backend
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
-      SECRET_KEY: ${BACKEND_SECRET_KEY:-change-me-in-production}
-      APP_PORT: ${BACKEND_PORT:-5002}
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1412}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      
+      # Server
+      APP_PORT: 5002
+      SECRET_KEY: ${BACKEND_SECRET_KEY:-smart-parking-backend-secret-change-in-production}
       FLASK_ENV: ${FLASK_ENV:-production}
+      
+      # Python
+      PYTHONUNBUFFERED: 1
     ports:
-      - "${BACKEND_PORT:-5002}:5002"
+      - "5002:5002"
     networks:
       - parking_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
 
-# =============================================================================
+# ===========================================================================
 # Networks
-# =============================================================================
+# ===========================================================================
 networks:
   parking_network:
     driver: bridge
 
-# =============================================================================
+# ===========================================================================
 # Volumes
-# =============================================================================
+# ===========================================================================
 volumes:
   postgres_data:
     driver: local

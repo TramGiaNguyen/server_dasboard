@@ -4,74 +4,61 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 venv/
+env/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+.venv
 
-# Environment — NEVER commit secrets
-.env
-.env.local
-.env.*.local
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Models — download pretrained weights separately for production
-# Keep empty placeholder directories, ignore everything else in these folders
-static/models/*
-!static/models/.gitkeep
-services/ocr/LicensePlate_OCR_Standalone/models/*
-!services/ocr/LicensePlate_OCR_Standalone/models/.gitkeep
+# Flutter/Dart (bduparking folder)
+bduparking/
 
-# All model files
+# Model files (large files)
 *.pt
 *.onnx
 *.pth
-*.h5
-*.ckpt
-*.tflite
+*.weights
 
-# Media captures
-static/captures/
-static/improper_captures/
+# Archive files
+*.rar
+*.zip
+*.tar.gz
+*.7z
+
+# Capture folders (runtime generated)
 static/gate_captures/
 static/parking_captures/
-static/video/
-captures/
+
+# Keep .gitkeep files in empty directories
+!.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
 # Logs
 *.log
 logs/
 
-# IDE
-.vscode/
-.idea/
-.cursor/
-*.swp
-*.swo
-*~
-
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Archives (build artifacts)
-*.rar
-*.zip
+# Docker
+.dockerignore
 
-# Coverage
-htmlcov/
-.coverage
-.pytest_cache/
+# Test files
+test_mobile_api.py
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

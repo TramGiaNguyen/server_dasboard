@@ -261,6 +261,66 @@
             background: rgba(239, 68, 68, 0.3);
             transform: scale(1.1);
         }
+
+        /* User Management Modal */
+    .user-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .user-modal.active {
+        display: flex;
+    }
+    .user-modal-content {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border: var(--glass-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-card);
+        width: 95vw;
+        max-width: 1100px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .user-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        flex-shrink: 0;
+    }
+    .user-modal-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+    .user-modal-close {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 6px 10px;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: all var(--transition-fast);
+    }
+    .user-modal-close:hover {
+        background: rgba(239,68,68,0.2);
+        color: #ef4444;
+        border-color: rgba(239,68,68,0.3);
+    }
     </style>
 </head>
 
@@ -335,6 +395,16 @@
                         <span class="text-xs font-bold">Quản Lý Slot VIP</span>
                     </div>
                     <button onclick="toggleVipModal()" class="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-yellow-400 text-[10px] font-bold uppercase transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">settings</span>
+                        Cấu Hình
+                    </button>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-purple-500 text-base">group</span>
+                        <span class="text-xs font-bold">Quản Lý Người Dùng</span>
+                    </div>
+                    <button onclick="toggleUserModal()" class="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 rounded-lg text-purple-400 text-[10px] font-bold uppercase transition-colors flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">settings</span>
                         Cấu Hình
                     </button>
@@ -489,6 +559,119 @@
         <p class="text-sm text-slate-400 mb-4">Chọn các slot VIP (không cho phép người dùng thường đặt chỗ)</p>
         <div id="vipSlotsCheckboxes" class="grid grid-cols-5 gap-3">
             <!-- Filled by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- User Management Modal -->
+<div id="userModal" class="user-modal">
+    <div class="user-modal-content">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <span class="material-symbols-outlined text-purple-500">group</span>
+                <span id="userModalTitle">Quản Lý Người Dùng</span>
+            </div>
+            <button onclick="closeUserModal()" class="user-modal-close">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+        <div style="padding: 16px 20px; flex: 1; overflow-y: auto;">
+            <!-- Action bar -->
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="openAddUserForm()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined text-sm">person_add</span> Thêm người dùng
+                    </button>
+                    <button onclick="document.getElementById('csvFileInput').click()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined text-sm">upload</span> Import CSV
+                    </button>
+                    <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)">
+                    <a href="/api/manager/users/csv-template" download class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined text-sm">download</span> Tải CSV mẫu
+                    </a>
+                    <button onclick="exportUsers()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined text-sm">file_download</span> Export
+                    </button>
+                </div>
+                <div class="flex gap-2 items-center flex-wrap">
+                    <select id="roleFilter" onchange="loadUsers(1)" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-200">
+                        <option value="">Tất cả vai trò</option>
+                        <option value="student">Sinh viên</option>
+                        <option value="guard">Bảo vệ</option>
+                        <option value="staff">Nhân viên</option>
+                        <option value="manager">Quản lý</option>
+                    </select>
+                    <input type="text" id="userSearch" placeholder="Tìm kiếm..." oninput="debounceSearch(this.value)" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-200 w-48">
+                </div>
+            </div>
+
+            <!-- Add/Edit user form (hidden by default) -->
+            <div id="userFormPanel" class="hidden mb-4 p-4 bg-slate-800/60 border border-slate-600 rounded-xl">
+                <h4 id="formPanelTitle" class="text-sm font-bold mb-3 text-primary">Thêm người dùng mới</h4>
+                <form id="userForm" onsubmit="saveUser(event)" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <input type="hidden" id="editUserId" value="">
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Username *</label>
+                        <input id="fUsername" required class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="username">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Mật khẩu <span id="pwRequired" class="text-red-400">*</span>&lt;/label>
+                        <input id="fPassword" type="password" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="Mật khẩu">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Họ tên</label>
+                        <input id="fFullName" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="Nguyen Van A">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Vai trò *</label>
+                        <select id="fRole" required class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200">
+                            <option value="student">Sinh viên</option>
+                            <option value="guard">Bảo vệ</option>
+                            <option value="staff">Nhân viên</option>
+                            <option value="manager">Quản lý</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Email</label>
+                        <input id="fEmail" type="email" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Điện thoại</label>
+                        <input id="fPhone" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="0901234567">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-400 mb-1 block">Biển số mặc định</label>
+                        <input id="fPlate" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200 uppercase" placeholder="61A12345">
+                    </div>
+                    <div class="md:col-span-4 flex gap-2 mt-1">
+                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Lưu</button>
+                        <button type="button" onclick="closeUserForm()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Hủy</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Users table -->
+            <div class="overflow-x-auto rounded-lg border border-slate-700">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-400 bg-slate-800/80 border-b border-slate-700">
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Username</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Họ tên</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Email</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Điện thoại</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Biển số</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Vai trò</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Ngày tạo</th>
+                            <th class="py-3 px-3 text-center font-semibold text-xs uppercase tracking-wide">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-slate-700/50">
+                        <tr><td colspan="8" class="py-8 text-center text-slate-500">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div id="usersPagination" class="flex justify-center gap-1 mt-4 flex-wrap"></div>
         </div>
     </div>
 </div>
@@ -910,6 +1093,230 @@
     setInterval(fetchSlotFrequency, 30000);
     setInterval(fetchFrequentViolators, 30000);
     setInterval(fetchLowAvailability, 30000);
+
+    // ================================================================
+    // USER MANAGEMENT
+    // ================================================================
+
+    var _usersPage = 1;
+    var _usersTotal = 0;
+    var _usersSearch = '';
+    var _searchTimeout = null;
+
+    function toggleUserModal() {
+        var modal = document.getElementById('userModal');
+        if (!modal) return;
+        var isActive = modal.classList.toggle('active');
+        if (isActive) loadUsers(1, '');
+    }
+
+    function closeUserModal() {
+        var modal = document.getElementById('userModal');
+        if (modal) modal.classList.remove('active');
+        closeUserForm();
+    }
+
+    function debounceSearch(val) {
+        clearTimeout(_searchTimeout);
+        _searchTimeout = setTimeout(function() {
+            loadUsers(1, val);
+        }, 350);
+    }
+
+    function loadUsers(page, search) {
+        _usersPage = page || 1;
+        _usersSearch = search !== undefined ? search : _usersSearch;
+        var roleFilter = document.getElementById('roleFilter') ? document.getElementById('roleFilter').value : '';
+        var params = 'page=' + _usersPage + '&limit=20&search=' + encodeURIComponent(_usersSearch);
+        if (roleFilter) params += '&role=' + encodeURIComponent(roleFilter);
+        fetch('/api/manager/users?' + params)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                _usersTotal = data.total;
+                renderUsersTable(data.items || []);
+                renderUsersPagination();
+            })
+            .catch(function(e) { console.error(e); });
+    }
+
+    function renderUsersTable(users) {
+        var tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">Không có dữ liệu</td></tr>';
+            return;
+        }
+        var ROLE_LABELS = {manager: 'Quản lý', guard: 'Bảo vệ', staff: 'Nhân viên', student: 'Sinh viên'};
+        var ROLE_COLORS = {manager: 'bg-purple-600', guard: 'bg-red-600', staff: 'bg-blue-600', student: 'bg-emerald-600'};
+        var html = '';
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var roleLabel = ROLE_LABELS[u.role] || u.role;
+            var roleColor = ROLE_COLORS[u.role] || 'bg-slate-600';
+            var createdAt = u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '-';
+            html += '<tr class="border-b border-slate-700/40 hover:bg-slate-700/30 transition-colors">';
+            html += '<td class="py-3 px-3 font-mono text-sm text-primary font-semibold">' + escHtml(u.username) + '</td>';
+            html += '<td class="py-3 px-3">' + escHtml(u.full_name || '-') + '</td>';
+            html += '<td class="py-3 px-3 text-sm">' + escHtml(u.email || '-') + '</td>';
+            html += '<td class="py-3 px-3 text-sm">' + escHtml(u.phone || '-') + '</td>';
+            html += '<td class="py-3 px-3 font-mono text-xs text-yellow-400">' + escHtml(u.plate || '-') + '</td>';
+            html += '<td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs text-white ' + roleColor + '">' + escHtml(roleLabel) + '</span></td>';
+            html += '<td class="py-3 px-3 text-xs text-slate-400">' + createdAt + '</td>';
+            html += '<td class="py-3 px-3 text-center">';
+            html += '<button onclick="editUser(' + u.user_id + ')" class="p-1.5 hover:text-blue-400 transition-colors" title="Sửa"><span class="material-symbols-outlined text-base">edit</span></button>';
+            html += '<button onclick="deleteUser(' + u.user_id + ',\'' + escHtml(u.username).replace(/'/g, "\\'") + '\')" class="p-1.5 hover:text-red-400 transition-colors" title="Xóa"><span class="material-symbols-outlined text-base">delete</span></button>';
+            html += '</td></tr>';
+        }
+        tbody.innerHTML = html;
+    }
+
+    function renderUsersPagination() {
+        var container = document.getElementById('usersPagination');
+        if (!container) return;
+        var totalPages = Math.ceil(_usersTotal / 20);
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+        var html = '';
+        var maxBtns = 5;
+        var start = Math.max(1, _usersPage - Math.floor(maxBtns / 2));
+        var end = Math.min(totalPages, start + maxBtns - 1);
+        if (end - start < maxBtns - 1) start = Math.max(1, end - maxBtns + 1);
+        if (_usersPage > 1) html += '<button onclick="loadUsers(' + (_usersPage - 1) + ')" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">‹</button>';
+        for (var p = start; p <= end; p++) {
+            html += '<button onclick="loadUsers(' + p + ')" class="px-3 py-1 rounded text-sm ' + (p === _usersPage ? 'bg-primary text-white' : 'bg-slate-700 hover:bg-slate-600') + '">' + p + '</button>';
+        }
+        if (_usersPage < totalPages) html += '<button onclick="loadUsers(' + (_usersPage + 1) + ')" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm">›</button>';
+        container.innerHTML = html;
+    }
+
+    function openAddUserForm() {
+        document.getElementById('editUserId').value = '';
+        document.getElementById('fUsername').value = '';
+        document.getElementById('fUsername').disabled = false;
+        document.getElementById('fPassword').value = '';
+        document.getElementById('fPassword').required = true;
+        document.getElementById('fFullName').value = '';
+        document.getElementById('fEmail').value = '';
+        document.getElementById('fPhone').value = '';
+        document.getElementById('fPlate').value = '';
+        document.getElementById('fRole').value = 'student';
+        document.getElementById('formPanelTitle').textContent = 'Thêm người dùng mới';
+        document.getElementById('userFormPanel').classList.remove('hidden');
+    }
+
+    function closeUserForm() {
+        document.getElementById('userFormPanel').classList.add('hidden');
+    }
+
+    function editUser(uid) {
+        // Find user in currently loaded page
+        var rows = document.querySelectorAll('#usersTableBody tr');
+        var user = null;
+        for (var i = 0; i < rows.length; i++) {
+            var btn = rows[i].querySelector('button[onclick^="editUser("]');
+            if (btn && btn.getAttribute('onclick').includes('(' + uid + ')')) {
+                // We have the UID, fetch full data from API
+                break;
+            }
+        }
+        fetch('/api/manager/users?search=&page=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var u = null;
+                var items = data.items || [];
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].user_id === uid) { u = items[i]; break; }
+                }
+                if (!u) { alert('Không tìm thấy user'); return; }
+                document.getElementById('editUserId').value = u.user_id;
+                document.getElementById('fUsername').value = u.username;
+                document.getElementById('fUsername').disabled = true;
+                document.getElementById('fPassword').value = '';
+                document.getElementById('fPassword').required = false;
+                document.getElementById('fFullName').value = u.full_name || '';
+                document.getElementById('fEmail').value = u.email || '';
+                document.getElementById('fPhone').value = u.phone || '';
+                document.getElementById('fPlate').value = u.plate || '';
+                document.getElementById('fRole').value = u.role;
+                document.getElementById('formPanelTitle').textContent = 'Sửa người dùng';
+                document.getElementById('userFormPanel').classList.remove('hidden');
+            })
+            .catch(function(e) { alert('Lỗi: ' + e); });
+    }
+
+    function saveUser(e) {
+        e.preventDefault();
+        var uid = document.getElementById('editUserId').value;
+        var body = {
+            full_name: document.getElementById('fFullName').value || null,
+            email: document.getElementById('fEmail').value || null,
+            phone: document.getElementById('fPhone').value || null,
+            plate: document.getElementById('fPlate').value || null,
+            role: document.getElementById('fRole').value,
+        };
+        var pw = document.getElementById('fPassword').value;
+        if (pw) body.password = pw;
+        var method = uid ? 'PUT' : 'POST';
+        var url = uid ? '/api/manager/users/' + uid : '/api/manager/users';
+        fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                closeUserForm();
+                loadUsers(_usersPage, _usersSearch);
+            })
+            .catch(function(e) { alert('Lỗi: ' + e); });
+    }
+
+    function deleteUser(uid, username) {
+        if (!confirm('Xóa tài khoản "' + username + '"?\nHành động này không thể hoàn tác.')) return;
+        fetch('/api/manager/users/' + uid, {method: 'DELETE'})
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                loadUsers(_usersPage, _usersSearch);
+            })
+            .catch(function(e) { alert('Lỗi: ' + e); });
+    }
+
+    function handleCSVUpload(input) {
+        var file = input.files[0];
+        if (!file) return;
+        var formData = new FormData();
+        formData.append('file', file);
+        fetch('/api/manager/users/import-csv', {method: 'POST', body: formData})
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) { alert('Lỗi: ' + data.error); }
+                else {
+                    var msg = 'Đã tạo ' + data.created + ' tài khoản.';
+                    if (data.skipped && data.skipped.length) {
+                        msg += ' Bỏ qua ' + data.skipped.length + ' dòng:';
+                        for (var i = 0; i < Math.min(data.skipped.length, 3); i++) {
+                            msg += '\n  Dòng ' + data.skipped[i].row + ': ' + data.skipped[i].reason;
+                        }
+                        if (data.skipped.length > 3) msg += '\n  ...';
+                    }
+                    alert(msg);
+                    loadUsers(1, _usersSearch);
+                }
+            })
+            .catch(function(e) { alert('Lỗi: ' + e); });
+        input.value = '';
+    }
+
+    function exportUsers() {
+        window.location.href = '/api/manager/users/export-csv';
+    }
+
+    function escHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 </script>
 </body>
 

@@ -1,89 +1,127 @@
-# =============================================================================
-# Docker Build Ignore File
-# Exclude unnecessary files from build context to reduce image size
-# =============================================================================
-
-# Git
-.git
-.gitignore
-
 # Python
-__pycache__
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-var
-sdist
-develop-eggs
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
 .installed.cfg
-lib
-lib64
-venv
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
 .venv
-env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env.example
 .env.local
 .env.*.local
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-.cursor
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
 
-# Testing
-.coverage
-htmlcov
-.tox
-.nox
-.pytest_cache
+# Archives
+*.rar
+*.zip
+*.tar.gz
+*.7z
+server_dasboard.rar
+server_dasboard1.rar
+gate_camera.rar
 
-# Documentation
-*.md
-!requirements.txt
-docs
-README*
-
-# Docker
-docker-compose*.yml
-.dockerignore
-Dockerfile*
-.docker
-
-# Local development
-.env
-.env.example
-*.log
-*.pot
-*.pyc
-
-# Models (large files - should be mounted or downloaded at runtime)
-static/models/*.pt
-static/models/*.onnx
-
-# Video files
-static/video/*.mp4
-static/video/*.avi
-
-# OCR models
-services/ocr/LicensePlate_OCR_Standalone/models/*.onnx
+# Scripts (keep only necessary ones)
+cleanup_docker.sh
+scripts/
 
 # Simulator
 simulator/
 
-# Test files
-test/
+# Large model files (download separately or mount as volume)
+# static/models/*.pt
+# static/models/*.onnx
 
-# Node (if any)
-node_modules
+# Captured images (mount as volume instead)
+# static/gate_captures/
+# static/parking_captures/
 
-# OS
-.DS_Store
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+
+# OS files
 Thumbs.db
+.DS_Store
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Pytest
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json

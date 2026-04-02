@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from flask import Response, render_template, jsonify, redirect, url_for, request, session, stream_with_context
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import func, extract, cast, case, Date, desc
 
 # Add parent directory to path for imports
@@ -90,15 +90,15 @@ def register_routes(app, socketio):
         next_url = request.form.get('next') or url_for('index')
 
         if not username or not password:
-            return render_template('login.html', error='Vui lÃ²ng nháº­p username vÃ  máº­t kháº©u')
+            return render_template('login.html', error='Vui lòng nhập username và mật khẩu')
 
         db = get_db()
         try:
             user = db.query(User).filter_by(username=username).first()
             if not user or not check_password_hash(user.password_hash, password):
-                return render_template('login.html', error='TÃªn Ä‘Äƒng nháº­p hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng')
+                return render_template('login.html', error='Tên đăng nhập hoặc mật khẩu không đúng')
             if user.role == 'student':
-                return render_template('login.html', error='TÃ i khoáº£n sinh viÃªn khÃ´ng Ä‘Æ°á»£c truy cáº­p web dashboard. DÃ¹ng app mobile.')
+                return render_template('login.html', error='Tài khoản sinh viên không được truy cập web dashboard. Dùng app mobile.')
             login_user(user)
             if user.role == 'manager':
                 return redirect(url_for('manager_dashboard'))
@@ -444,43 +444,6 @@ def register_routes(app, socketio):
             return jsonify({'error': str(e)}), 500
         finally:
             db.close()
-
-    @app.route('/api/manager/vip-slots', methods=['PUT'])
-    @login_required
-    @role_required('manager')
-    def put_manager_vip_slots():
-        """Set VIP slots. Body: { "slot_ids": [1,5,10] } or { "slot_numbers": [1,5,10] }."""
-        data = request.get_json() or {}
-        slot_ids = data.get('slot_ids') or []
-        slot_numbers = data.get('slot_numbers') or []
-
-        db = get_db()
-        try:
-            all_slots = db.query(ParkingSlot).all()
-            target_slot_ids = set()
-            if slot_ids:
-                target_slot_ids = set(int(x) for x in slot_ids)
-            elif slot_numbers:
-                for sn in slot_numbers:
-                    s = next((x for x in all_slots if x.slot_number == int(sn)), None)
-                    if s:
-                        target_slot_ids.add(s.slot_id)
-
-            for s in all_slots:
-                s.is_vip = s.slot_id in target_slot_ids
-            db.commit()
-
-            vip_nums = [x.slot_number for x in all_slots if x.is_vip]
-            if socketio:
-                socketio.emit('vip_slots_updated', {'slot_numbers': vip_nums})
-
-            return jsonify({'slot_numbers': vip_nums})
-        except Exception as e:
-            db.rollback()
-            return jsonify({'error': str(e)}), 400
-        finally:
-            db.close()
-
     @app.route('/api/manager/improper-parking-logs')
     def get_manager_improper_parking_logs():
         """All improper parking logs for Manager dashboard (no limit)"""
@@ -590,9 +553,9 @@ def register_routes(app, socketio):
         db = get_db()
         try:
             plate_label = case(
-                (ImproperParkingLog.plate_text.is_(None), 'KhÃ´ng nháº­n dáº¡ng'),
-                (ImproperParkingLog.plate_text == '', 'KhÃ´ng nháº­n dáº¡ng'),
-                (ImproperParkingLog.plate_text == '---', 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text.is_(None), 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text == '', 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text == '---', 'Không nhận dạng'),
                 else_=ImproperParkingLog.plate_text,
             )
             plate_counts = (
@@ -607,7 +570,7 @@ def register_routes(app, socketio):
             )
             result = []
             for label, count in plate_counts:
-                if label == 'KhÃ´ng nháº­n dáº¡ng':
+                if label == 'Không nhận dạng':
                     events_q = db.query(ImproperParkingLog).filter(
                         (ImproperParkingLog.plate_text.is_(None))
                         | (ImproperParkingLog.plate_text == '')
@@ -745,7 +708,7 @@ def register_routes(app, socketio):
             rows = []
             for l in logs:
                 ts = l.timestamp.strftime('%d/%m/%Y %H:%M:%S') if l.timestamp else ''
-                event = 'NgoÃ i slot' if l.event_type == 'outside' else 'Láº¥n Ã´'
+                event = 'NgoÃ i slot' if l.event_type == 'outside' else 'Lấn ô'
                 rows.append([ts, l.plate_text or '', event, l.image_path or ''])
             return _make_csv_response(header, rows, 'improper_parking_logs.csv')
         except Exception as e:
@@ -759,7 +722,7 @@ def register_routes(app, socketio):
         header = ['Slot', 'Trang_thai', 'Bien_so']
         rows = []
         for s in slots:
-            status = 'CÃ³ xe' if s.get('status') == 'occupied' else 'Trá»‘ng'
+            status = 'Có xe' if s.get('status') == 'occupied' else 'Trá»‘ng'
             plate = s.get('plate') or ''
             rows.append([f"Slot {s.get('slot_number', '')}", status, plate])
         return _make_csv_response(header, rows, 'slot_status.csv')
@@ -769,9 +732,9 @@ def register_routes(app, socketio):
         db = get_db()
         try:
             plate_label = case(
-                (ImproperParkingLog.plate_text.is_(None), 'KhÃ´ng nháº­n dáº¡ng'),
-                (ImproperParkingLog.plate_text == '', 'KhÃ´ng nháº­n dáº¡ng'),
-                (ImproperParkingLog.plate_text == '---', 'KhÃ´ng nháº­n dáº¡ng'),
+                (ImproperParkingLog.plate_text.is_(None), 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text == '', 'Không nhận dạng'),
+                (ImproperParkingLog.plate_text == '---', 'Không nhận dạng'),
                 else_=ImproperParkingLog.plate_text,
             )
             plate_counts = (
@@ -787,7 +750,7 @@ def register_routes(app, socketio):
             header = ['Bien_so', 'So_lan', 'Loai_gan_nhat', 'Anh_gan_nhat']
             rows = []
             for label, count in plate_counts:
-                if label == 'KhÃ´ng nháº­n dáº¡ng':
+                if label == 'Không nhận dạng':
                     latest = (
                         db.query(ImproperParkingLog)
                         .filter(
@@ -808,7 +771,7 @@ def register_routes(app, socketio):
                 event = ''
                 img = ''
                 if latest:
-                    event = 'NgoÃ i slot' if latest.event_type == 'outside' else 'Láº¥n Ã´'
+                    event = 'NgoÃ i slot' if latest.event_type == 'outside' else 'Lấn ô'
                     img = latest.image_path or ''
                 rows.append([label, count, event, img])
             return _make_csv_response(header, rows, 'frequent_violators.csv')
@@ -818,6 +781,301 @@ def register_routes(app, socketio):
             db.close()
 
     # â”€â”€ System Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+
+    # ============================================================
+    # Manager: User Management
+    # ============================================================
+
+    @app.route('/api/manager/users', methods=['GET'])
+    @login_required
+    @role_required('manager')
+    def get_manager_users():
+        """Get all users with pagination and search."""
+        page = max(1, int(request.args.get('page', 1)))
+        limit = min(50, max(1, int(request.args.get('limit', 20))))
+        offset = (page - 1) * limit
+        search = (request.args.get('search') or '').strip()
+        role_filter = request.args.get('role')
+
+        db = get_db()
+        try:
+            q = db.query(User)
+            if search:
+                q = q.filter(
+                    User.full_name.ilike(f'%{search}%') |
+                    User.username.ilike(f'%{search}%') |
+                    User.plate.ilike(f'%{search}%') |
+                    User.email.ilike(f'%{search}%')
+                )
+            if role_filter:
+                q = q.filter(User.role == role_filter)
+            total = q.count()
+            users = q.order_by(User.created_at.desc()).offset(offset).limit(limit).all()
+            return jsonify({
+                'items': [{
+                    'user_id': u.user_id,
+                    'username': u.username,
+                    'full_name': u.full_name or '',
+                    'email': u.email or '',
+                    'phone': u.phone or '',
+                    'plate': u.plate or '',
+                    'role': u.role,
+                    'created_at': u.created_at.isoformat() if u.created_at else None,
+                } for u in users],
+                'total': total, 'page': page, 'limit': limit,
+            })
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users', methods=['POST'])
+    @login_required
+    @role_required('manager')
+    def create_manager_user():
+        """Create a new user (manual entry)."""
+        data = request.get_json() or {}
+        required = ['username', 'password', 'role']
+        for f in required:
+            if not data.get(f):
+                return jsonify({'error': f'{f} is required'}), 400
+        if data['role'] not in ('student', 'guard', 'staff', 'manager'):
+            return jsonify({'error': 'Invalid role'}), 400
+        db = get_db()
+        try:
+            existing = db.query(User).filter_by(username=data['username']).first()
+            if existing:
+                return jsonify({'error': 'Username da ton tai'}), 409
+            u = User(
+                username=data['username'],
+                password_hash=generate_password_hash(data['password']),
+                role=data['role'],
+                full_name=data.get('full_name') or None,
+                email=data.get('email') or None,
+                phone=data.get('phone') or None,
+                plate=data.get('plate', '').strip().upper()[:20] or None,
+            )
+            db.add(u)
+            db.commit()
+            return jsonify({
+                'user_id': u.user_id,
+                'username': u.username,
+                'full_name': u.full_name or '',
+                'email': u.email or '',
+                'phone': u.phone or '',
+                'plate': u.plate or '',
+                'role': u.role,
+                'created_at': u.created_at.isoformat() if u.created_at else None,
+            }), 201
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 400
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users/import-csv', methods=['POST'])
+    @login_required
+    @role_required('manager')
+    def import_users_csv():
+        """Bulk import users from CSV file."""
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+        file = request.files['file']
+        if not file.filename.endswith('.csv'):
+            return jsonify({'error': 'File phai la .csv'}), 400
+        stream = io.StringIO(file.stream.read().decode('utf-8-sig'))
+        reader = csv.reader(stream)
+        header = next(reader, None)
+        if not header:
+            return jsonify({'error': 'Empty CSV file'}), 400
+        required_cols = {'username', 'password', 'role'}
+        col_names = {h.lower().strip(): i for i, h in enumerate(header)}
+        if not required_cols.issubset(col_names.keys()):
+            return jsonify({'error': 'CSV must have columns: username,password,role[,full_name,email,phone,plate]'}), 400
+        db = get_db()
+        created, skipped = [], []
+        try:
+            for row_num, row in enumerate(reader, start=2):
+                if not any(c.strip() for c in row):
+                    continue
+                try:
+                    username = row[col_names['username']].strip()
+                    password = row[col_names['password']].strip()
+                    role = row[col_names['role']].strip()
+                    if role not in ('student', 'guard', 'staff', 'manager'):
+                        skipped.append({'row': row_num, 'reason': f'Invalid role: {role}'})
+                        continue
+                    if db.query(User).filter_by(username=username).first():
+                        skipped.append({'row': row_num, 'reason': f'Username "{username}" da ton tai'})
+                        continue
+                    u = User(
+                        username=username,
+                        password_hash=generate_password_hash(password),
+                        role=role,
+                        full_name=row[col_names.get('full_name', -1)].strip() or None if col_names.get('full_name', -1) >= 0 else None,
+                        email=row[col_names.get('email', -1)].strip() or None if col_names.get('email', -1) >= 0 else None,
+                        phone=row[col_names.get('phone', -1)].strip() or None if col_names.get('phone', -1) >= 0 else None,
+                        plate=row[col_names.get('plate', -1)].strip().upper()[:20] or None if col_names.get('plate', -1) >= 0 else None,
+                    )
+                    db.add(u)
+                    created.append(username)
+                except Exception as e:
+                    skipped.append({'row': row_num, 'reason': str(e)})
+            db.commit()
+            return jsonify({'created': len(created), 'usernames': created, 'skipped': skipped})
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 400
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users/<int:uid>', methods=['PUT'])
+    @login_required
+    @role_required('manager')
+    def update_manager_user(uid):
+        """Update an existing user."""
+        data = request.get_json() or {}
+        db = get_db()
+        try:
+            u = db.query(User).filter_by(user_id=uid).first()
+            if not u:
+                return jsonify({'error': 'User not found'}), 404
+            if 'full_name' in data:
+                u.full_name = data['full_name'][:100] or None
+            if 'email' in data:
+                u.email = data['email'][:100] or None
+            if 'phone' in data:
+                u.phone = data['phone'][:20] or None
+            if 'plate' in data:
+                u.plate = data['plate'].strip().upper()[:20] or None
+            if 'role' in data and data['role'] in ('student', 'guard', 'staff', 'manager'):
+                u.role = data['role']
+            if data.get('password'):
+                u.password_hash = generate_password_hash(data['password'])
+            u.updated_at = datetime.now(timezone.utc)
+            db.commit()
+            return jsonify({'ok': True})
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 400
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users/<int:uid>', methods=['DELETE'])
+    @login_required
+    @role_required('manager')
+    def delete_manager_user(uid):
+        """Delete a user."""
+        if uid == session.get('user_id'):
+            return jsonify({'error': 'Khong the xoa chinh ban'}), 400
+        db = get_db()
+        try:
+            u = db.query(User).filter_by(user_id=uid).first()
+            if not u:
+                return jsonify({'error': 'User not found'}), 404
+            db.delete(u)
+            db.commit()
+            return jsonify({'ok': True})
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 400
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users/export-csv')
+    @login_required
+    @role_required('manager')
+    def export_users_csv():
+        """Export all users to CSV."""
+        db = get_db()
+        try:
+            users = db.query(User).order_by(User.created_at.desc()).all()
+            header = ['username', 'full_name', 'email', 'phone', 'plate', 'role', 'created_at']
+            rows = [[
+                u.username, u.full_name or '', u.email or '',
+                u.phone or '', u.plate or '', u.role,
+                u.created_at.strftime('%d/%m/%Y') if u.created_at else '',
+            ] for u in users]
+            return _make_csv_response(header, rows, 'users.csv')
+        finally:
+            db.close()
+
+    @app.route('/api/manager/users/csv-template')
+    @login_required
+    @role_required('manager')
+    def users_csv_template():
+        """Download CSV template for bulk user import."""
+        header = ['username', 'password', 'role', 'full_name', 'email', 'phone', 'plate']
+        sample = [
+            ['sv001', 'password123', 'student', 'Nguyen Van A', 'sv001@bdu.edu.vn', '0901234567', '61A12345'],
+            ['bv001', 'password123', 'guard', 'Tran Thi B', '', '', ''],
+        ]
+        buf = io.StringIO()
+        buf.write('﻿')
+        w = csv.writer(buf)
+        w.writerow(header)
+        w.writerows(sample)
+        return Response(
+            buf.getvalue(),
+            mimetype='text/csv; charset=utf-8',
+            headers={'Content-Disposition': 'attachment; filename="users_template.csv"'}
+        )
+
+    # ============================================================
+    # Manager: VIP Slots Change -> notify backend app (port 5002)
+    # ============================================================
+
+    @app.route('/api/manager/vip-slots', methods=['PUT'])
+    @login_required
+    @role_required('manager')
+    def put_manager_vip_slots():
+        """Set VIP slots + notify backend app so it broadcasts to mobile clients."""
+        data = request.get_json() or {}
+        slot_ids = data.get('slot_ids') or []
+        slot_numbers = data.get('slot_numbers') or []
+
+        db = get_db()
+        try:
+            all_slots = db.query(ParkingSlot).all()
+            target_slot_ids = set()
+            if slot_ids:
+                target_slot_ids = set(int(x) for x in slot_ids)
+            elif slot_numbers:
+                for sn in slot_numbers:
+                    s = next((x for x in all_slots if x.slot_number == int(sn)), None)
+                    if s:
+                        target_slot_ids.add(s.slot_id)
+
+            for s in all_slots:
+                s.is_vip = s.slot_id in target_slot_ids
+            db.commit()
+
+            vip_nums = sorted([x.slot_number for x in all_slots if x.is_vip])
+
+            # Emit via Socket.IO on main app (web dashboard)
+            if socketio:
+                socketio.emit('vip_slots_updated', {'slot_numbers': vip_nums})
+
+            # Notify backend app (port 5002) to broadcast to mobile clients
+            try:
+                import urllib.request
+                import json as _json
+                backend_url = os.getenv('BACKEND_APP_URL', 'http://localhost:5002')
+                req = urllib.request.Request(
+                    f'{backend_url}/api/app/internal/vip-slots-changed',
+                    data=_json.dumps({'slot_numbers': vip_nums}).encode(),
+                    headers={'Content-Type': 'application/json'},
+                    method='POST'
+                )
+                urllib.request.urlopen(req, timeout=3)
+            except Exception as _e:
+                print(f"[Manager] Could not notify backend app: {_e}")
+
+            return jsonify({'slot_numbers': vip_nums})
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 400
+        finally:
+            db.close()
 
     @app.route('/health')
     def health_check():

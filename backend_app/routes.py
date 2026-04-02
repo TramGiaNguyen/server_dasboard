@@ -17,8 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.db import get_db
 from database.models import User, UserVehicle, SlotReservation, Notification, ParkingSlot
-import shared.state as shared_state
-from services.reservation_scheduler import get_remaining_time
+from utils import get_remaining_time
 
 # In-memory token store: token -> user_id (for production use Redis/DB)
 _app_tokens = {}
@@ -59,24 +58,14 @@ def register_app_routes(app, socketio=None):
 
     @app.route('/api/app/camera-stream')
     def app_camera_stream():
-        """MJPEG relay for app: ?camera=gate (default) or ?camera=parking."""
-        camera = (request.args.get('camera') or 'gate').lower()
-        use_parking = camera == 'parking'
-
-        def _relay():
-            while True:
-                if use_parking:
-                    with shared_state.parking_jpeg_lock:
-                        frame = shared_state.parking_latest_jpeg
-                else:
-                    with shared_state.gate_jpeg_lock:
-                        frame = shared_state.gate_latest_jpeg
-                if frame:
-                    yield (b'--frame\r\n'
-                           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-                time.sleep(0.033)
-
-        return Response(_relay(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        """
+        Camera stream endpoint - returns 503 Service Unavailable
+        Mobile app should connect directly to main app (port 5001) for camera streams
+        """
+        return jsonify({
+            'error': 'Camera streams not available on backend API',
+            'message': 'Please connect to main app at port 5001 for camera streams'
+        }), 503
 
     @app.route('/api/app/login', methods=['POST'])
     def app_login():
@@ -208,7 +197,8 @@ def register_app_routes(app, socketio=None):
     @app_auth_required
     def app_slots_available(user):
         """Get slots available for given date and time range.
-        Dùng real-time status từ current_parking_status (cùng nguồn với Dashboard web).
+        Returns slots that are not reserved and not VIP.
+        Note: Real-time occupancy status is available on main app (port 5001).
         """
         date_str = request.args.get('date')  # YYYY-MM-DD
         time_from = request.args.get('time_from')  # HH:MM
@@ -235,15 +225,10 @@ def register_app_routes(app, socketio=None):
             slots = db.query(ParkingSlot).order_by(ParkingSlot.slot_number).all()
             vip_slot_ids = {s.slot_id for s in slots if getattr(s, 'is_vip', False)}
             busy_slot_ids |= vip_slot_ids
-            # Real-time status từ detection (cùng nguồn với Dashboard)
-            realtime_slots = {s['slot_number']: s for s in shared_state.current_parking_status.get('slots', [])}
+            
             available = []
             for s in slots:
-                if s.slot_id in busy_slot_ids:
-                    continue
-                rt = realtime_slots.get(s.slot_number)
-                is_occupied = rt.get('status') == 'occupied' if rt else False
-                if not is_occupied:
+                if s.slot_id not in busy_slot_ids:
                     available.append({
                         'slot_id': s.slot_id,
                         'slot_number': s.slot_number,
@@ -334,8 +319,19 @@ def register_app_routes(app, socketio=None):
                     'booking_date': booking_date,
                     'time_from': time_from,
                     'time_to': time_to,
+                    'user_name': user.full_name or user.username,
                 })
-            
+
+                # VIP slot booked -> broadcast to all connected clients
+                if getattr(slot, 'is_vip', False):
+                    socketio.emit('vip_slot_booked', {
+                        'slot_number': slot.slot_number,
+                        'user_name': user.full_name or user.username,
+                        'time_from': time_from,
+                        'time_to': time_to,
+                        'booking_date': booking_date,
+                    })
+
             return jsonify({
                 'reservation_id': r.reservation_id,
                 'slot_id': r.slot_id,
@@ -400,6 +396,14 @@ def register_app_routes(app, socketio=None):
             r.status = 'cancelled'
             r.updated_at = datetime.now(timezone.utc)
             db.commit()
+
+            # Emit Socket.IO cancellation event
+            if socketio:
+                socketio.emit('reservation_cancelled', {
+                    'reservation_id': rid,
+                    'slot_id': r.slot_id,
+                })
+
             return jsonify({'success': True})
         except Exception as e:
             db.rollback()
@@ -455,3 +459,19 @@ def register_app_routes(app, socketio=None):
             return jsonify({'error': str(e)}), 400
         finally:
             db.close()
+
+    @app.route('/api/app/internal/vip-slots-changed', methods=['POST'])
+    def internal_vip_slots_changed():
+        """
+        Internal endpoint: main app (port 5001) goi khi VIP slots thay doi.
+        Backend app se broadcast sang tat ca mobile app qua Socket.IO.
+        """
+        data = request.get_json() or {}
+        slot_numbers = data.get('slot_numbers', [])
+        if socketio:
+            socketio.emit('vip_slots_updated', {'slot_numbers': slot_numbers})
+        return jsonify({'ok': True})
+
+    @app.route('/health')
+    def app_health_check():
+        return {'status': 'ok', 'service': 'parking-app-backend'}, 200

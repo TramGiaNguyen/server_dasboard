@@ -19,14 +19,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create app directory
 WORKDIR /app
 
-# Copy requirements
-COPY requirements.txt .
+# Copy requirements from backend_app
+COPY backend_app/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy only database module (backend only needs DB access)
+COPY database /app/database
+COPY config.py /app/config.py
+
+# Copy backend_app code
+COPY backend_app/*.py /app/
+COPY backend_app/.env /app/.env
 
 # Create non-root user for security
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \

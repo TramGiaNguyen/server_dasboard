@@ -19,6 +19,7 @@
             {% if session.get('role') == 'manager' %}
             <a href="{{ url_for('index') }}" style="padding: 6px 10px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" title="Bảng giám sát">Giám sát</a>
             <a href="{{ url_for('manager_dashboard') }}" style="padding: 6px 10px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" title="Bảng quản lý">Quản lý</a>
+            <a href="{{ url_for('manager_dashboard') }}#users" style="padding: 6px 10px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" title="Quản lý người dùng">Người dùng</a>
             {% endif %}
             <div style="text-align: right;">
                 <p style="font-size: 0.7rem; font-weight: bold; line-height: 1.25; color: white; margin: 0;">{{ session.get('full_name') or session.get('username') or 'Tài khoản' }}</p>

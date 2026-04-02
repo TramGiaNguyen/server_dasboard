@@ -4,6 +4,7 @@ Standalone Flask server serving mobile app endpoints only.
 """
 import os
 import sys
+from datetime import datetime
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -32,14 +33,34 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 # Register mobile app routes
 register_app_routes(app, socketio)
 
+
+# ============================================================
+# Socket.IO Event Handlers
+# ============================================================
+
+@socketio.on('connect')
+def handle_connect():
+    print('[Socket.IO] Mobile app connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('[Socket.IO] Mobile app disconnected')
+
+@socketio.on('ping')
+def handle_ping():
+    socketio.emit('pong', {'ts': datetime.now().isoformat()})
+
+
+# ============================================================
 # Health check endpoint
+# ============================================================
 @app.route('/health')
 def health_check():
     return {'status': 'ok', 'service': 'parking-app-backend'}, 200
 
 if __name__ == '__main__':
-    port = int(os.getenv('APP_PORT', 5001))
+    port = int(os.getenv('APP_PORT', 5002))
     debug = os.getenv('FLASK_ENV', 'production') == 'development'
-    
+
     print(f"Starting Mobile App Backend Server on port {port}...")
     socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)
