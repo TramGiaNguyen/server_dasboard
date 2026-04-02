@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # Dockerfile for Smart Parking Main Application
 # =============================================================================
 # Multi-stage build for smaller production image
@@ -63,6 +63,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed Python packages from builder
 COPY --from=builder /app/.deps /usr/local/lib/python3.11/site-packages
 
+# Create app directory and set working directory
+WORKDIR /app
+
 # Copy application code
 COPY . .
 
@@ -75,12 +78,8 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
     chown -R appuser:appgroup /app
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
-
-# Expose port
-EXPOSE 5000
+# Expose port (SERVER_PORT controlled by docker-compose env)
+EXPOSE 5001
 
 # Default command - can be overridden in docker-compose
 CMD ["python", "main.py"]
@@ -117,10 +116,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy installed Python packages from builder
 COPY --from=builder /app/.deps /usr/local/lib/python3.11/site-packages
 
-# Create app directory
-RUN mkdir -p /app && \
-    groupadd -r appgroup && useradd -r -g appgroup appuser && \
-    chown -R appuser:appgroup /app
+# Create app directory and set working directory
+WORKDIR /app
 
 # Copy application code
 COPY --from=builder /app /app
@@ -134,12 +131,8 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
     chown -R appuser:appgroup /app
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
-
-# Expose port
-EXPOSE 5000
+# Expose port (SERVER_PORT controlled by docker-compose env)
+EXPOSE 5001
 
 # Default command - can be overridden in docker-compose
 CMD ["python", "main.py"]
