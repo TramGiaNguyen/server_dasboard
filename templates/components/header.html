@@ -1,0 +1,36 @@
+<header class="header glass-panel fade-in">
+    <div class="header-brand">
+        <img class="header-logo" src="/static/assets/logo-BDU-Eng.png" alt="Logo BDU">
+        <div class="header-identity">
+            <h1>BDU Smart Parking</h1>
+            <p>Khoa CNTT, ROBOT &amp; TTNT — Đại học Bình Dương</p>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            LIVE
+        </div>
+        <div class="datetime-display" style="display: flex; align-items: center; gap: 12px;">
+            <div id="dateDisplay">--</div>
+            <div id="timeDisplay" style="color: var(--color-accent); font-weight: bold; font-size: 0.875rem;">--:--:--</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 12px; margin-left: 4px;">
+            {% if session.get('role') == 'manager' %}
+            <a href="{{ url_for('index') }}" style="padding: 6px 10px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" title="Bảng giám sát">Giám sát</a>
+            <a href="{{ url_for('manager_dashboard') }}" style="padding: 6px 10px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" title="Bảng quản lý">Quản lý</a>
+            {% endif %}
+            <div style="text-align: right;">
+                <p style="font-size: 0.7rem; font-weight: bold; line-height: 1.25; color: white; margin: 0;">{{ session.get('full_name') or session.get('username') or 'Tài khoản' }}</p>
+                <p style="font-size: 0.6rem; color: var(--color-text-muted); margin: 0;">{% if session.get('role') == 'manager' %}Quản lý{% elif session.get('role') == 'staff' %}Nhân viên{% else %}Bảo vệ{% endif %}</p>
+            </div>
+            <div style="height: 32px; width: 32px; border-radius: 9999px; background-color: rgba(30,41,59,1); border: 1px solid rgba(0,198,255,0.3); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="user" style="width: 16px; height: 16px; color: #94a3b8;"></i>
+            </div>
+            <a href="{{ url_for('auth_logout') }}" title="Đăng xuất" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;" onmouseover="this.style.color='#ef4444'; this.style.background='rgba(239,68,68,0.15)';" onmouseout="this.style.color=''; this.style.background='';">
+                <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                Đăng xuất
+            </a>
+        </div>
+    </div>
+</header>

@@ -1,0 +1,916 @@
+<html class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Bảng Quản Lý - BDU Smart Parking</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0dccf2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#101f22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        :root {
+            --color-bg: #0a0f1e;
+            --color-primary: #0d1b35;
+            --color-secondary: #162040;
+            --color-accent: #00c6ff;
+            --color-accent-2: #7c3aed;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-text: #f0f4ff;
+            --color-text-muted: #8b9dc3;
+
+            --glass-bg: rgba(13, 27, 53, 0.5);
+            --glass-border: 1px solid rgba(0, 198, 255, 0.12);
+            --glass-blur: 14px;
+
+            --space-xs: 4px;
+            --space-sm: 6px;
+            --space-md: 12px;
+            --space-lg: 16px;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+
+            --shadow-glow: 0 0 20px rgba(0, 198, 255, 0.15);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+            --transition-fast: 150ms ease;
+            --transition-normal: 300ms ease;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 198, 255, 0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 198, 255, 0.35); }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .kpi-pulse { animation: kpi-in 0.4s ease; }
+        @keyframes kpi-in { from { opacity: 0.4; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
+            box-shadow: var(--shadow-card);
+            border-radius: var(--radius-md);
+        }
+
+        /* Header Match */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            margin: 0;
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-logo {
+            width: 36px;
+            height: auto;
+            border-radius: var(--radius-sm);
+            filter: drop-shadow(0 0 8px rgba(0, 198, 255, 0.4));
+        }
+
+        .header-identity h1 {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .header-identity p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.65rem;
+            color: var(--color-text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--color-success);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+        }
+
+        .datetime-display {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        /* Footer Match */
+        .footer-strip {
+            text-align: center;
+            padding: 5px 12px;
+            font-size: 0.62rem;
+            color: var(--color-text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        .footer-strip span {
+            color: var(--color-accent);
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* VIP Modal */
+        .vip-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vip-modal.active {
+            display: flex;
+        }
+
+        .vip-modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-card);
+        }
+
+        .vip-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .vip-modal-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .vip-modal-close {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .vip-modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+    <div class="flex flex-col h-screen p-3 gap-2">
+        <!-- Top Header Match Dashboard -->
+        {% include 'components/header.html' %}
+        <!-- Top Metrics Row -->
+        <div class="grid grid-cols-5 gap-3 shrink-0">
+            <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Tổng Chỗ</p>
+                <div class="flex items-end justify-between mt-0.5">
+                    <p class="text-2xl font-bold" id="kpi-total">—</p>
+                    <span class="material-symbols-outlined text-primary/40 text-3xl">grid_view</span>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Trống</p>
+                <div class="flex items-end justify-between mt-0.5">
+                    <p class="text-2xl font-bold text-emerald-400" id="kpi-available">—</p>
+                    <span class="material-symbols-outlined text-emerald-400/40 text-3xl">check_circle</span>
+                </div>
+            </div>
+            <div
+                class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between border-b-2 border-b-primary">
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đã Đỗ</p>
+                <div class="flex items-end justify-between mt-0.5">
+                    <p class="text-2xl font-bold text-primary" id="kpi-occupied">—</p>
+                    <span class="material-symbols-outlined text-primary/40 text-3xl">directions_car</span>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đỗ Sai Vị Trí</p>
+                <div class="flex items-end justify-between mt-0.5">
+                    <p class="text-2xl font-bold text-amber-500" id="kpi-overlapping">—</p>
+                    <span class="material-symbols-outlined text-amber-500/40 text-3xl">warning</span>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đỗ Bên Ngoài</p>
+                <div class="flex items-end justify-between mt-0.5">
+                    <p class="text-2xl font-bold text-rose-500" id="kpi-outside">—</p>
+                    <span class="material-symbols-outlined text-rose-500/40 text-3xl">error</span>
+                </div>
+            </div>
+        </div>
+        <!-- Middle Section -->
+        <div class="grid grid-cols-12 gap-3 flex-[6] min-h-0 overflow-hidden">
+            <!-- Occupancy and Traffic -->
+            <div class="col-span-2 flex flex-col gap-2">
+                <div class="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 min-h-0 overflow-hidden">
+                    <h3 class="text-xs font-bold mb-1 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-base">donut_large</span>
+                        Tỷ Lệ Lấp Đầy (<span id="occupancyPctTitle">—</span>%)
+                    </h3>
+                    <div class="relative flex items-center justify-center flex-1 min-h-0">
+                        <svg class="w-28 h-28 transform -rotate-90" viewBox="0 0 36 36">
+                            <circle class="text-slate-700" cx="18" cy="18" fill="transparent" r="15.9"
+                                stroke="currentColor" stroke-width="3"></circle>
+                            <circle id="occupancyRing" class="text-primary" cx="18" cy="18" fill="transparent" r="15.9" stroke="currentColor"
+                                stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="3"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-3xl font-bold" id="occupancyPct">—%</span>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Công suất bãi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-yellow-500 text-base">star</span>
+                        <span class="text-xs font-bold">Quản Lý Slot VIP</span>
+                    </div>
+                    <button onclick="toggleVipModal()" class="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-yellow-400 text-[10px] font-bold uppercase transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">settings</span>
+                        Cấu Hình
+                    </button>
+                </div>
+                <div class="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-col overflow-hidden min-h-0">
+                    <h3 class="text-xs font-bold mb-1 flex items-center gap-2 shrink-0">
+                        <span class="material-symbols-outlined text-primary text-base">bar_chart</span>
+                        Lưu Lượng Theo Giờ
+                    </h3>
+                    <div class="flex-1 min-h-0">
+                        <canvas id="hourlyTrafficChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Live Slot Grid -->
+            <div
+                class="col-span-10 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 overflow-hidden flex flex-col min-h-0">
+                <div class="flex items-center justify-between mb-2 shrink-0 flex-wrap gap-2">
+                    <h3 class="text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">view_comfy</span>
+                        Trạng Thái Slot Đậu Xe (Live)
+                    </h3>
+                    <div class="flex gap-4 flex-wrap">
+                        <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div> Trống
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div> Đã đặt
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div> VIP
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
+                            <div class="w-3 h-3 rounded-full bg-primary"></div> Đã Đỗ
+                        </div>
+                        <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
+                            <div class="w-3 h-3 rounded-full bg-rose-500"></div> Bị chiếm
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto" id="slotGrid">
+                    <div class="text-center text-slate-400 text-sm py-8">Đang tải...</div>
+                </div>
+            </div>
+        </div>
+        <!-- Bottom Section -->
+        <div class="grid grid-cols-12 gap-3 flex-[3] min-h-0 overflow-hidden">
+            <!-- Latest Entry/Exit History -->
+            <div class="col-span-4 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-col min-h-0 overflow-hidden">
+                <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">history</span>
+                        Lịch Sử Ra / Vào Cổng
+                    </span>
+                    <a href="/api/export/gate-logs.csv" class="text-[10px] text-primary hover:underline uppercase font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">download</span>CSV
+                    </a>
+                </h3>
+                <div class="overflow-y-auto flex-1 pr-1">
+                    <table class="w-full text-xs">
+                        <thead class="sticky top-0 bg-slate-800 text-slate-400 text-[10px] uppercase font-bold z-10">
+                            <tr>
+                                <th class="text-left pb-2 font-semibold">Biển Số</th>
+                                <th class="text-left pb-2 font-semibold">Thời Gian</th>
+                                <th class="text-left pb-2 font-semibold">Loại</th>
+                                <th class="text-right pb-2 font-semibold">Ảnh</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gateLogsBody" class="divide-y divide-slate-700/50">
+                            <tr><td colspan="4" class="py-4 text-center text-slate-400">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Improper Parking & Stats -->
+            <div class="col-span-5 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-col min-h-0 overflow-hidden">
+                <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-500 text-lg">error_outline</span>
+                        Lịch Sử Đậu Sai Vị Trí
+                    </span>
+                    <a href="/api/export/improper-parking-logs.csv" class="text-[10px] text-amber-500 hover:underline uppercase font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">download</span>CSV
+                    </a>
+                </h3>
+                <div class="grid grid-cols-2 gap-3 flex-1 min-h-0 overflow-hidden">
+                    <div class="overflow-y-auto pr-1 border-r border-slate-700/50">
+                        <table class="w-full text-[11px]">
+                            <thead class="sticky top-0 bg-slate-800 text-slate-400 text-[9px] uppercase font-bold z-10">
+                                <tr>
+                                    <th class="text-left pb-2 font-semibold">Vị Trí</th>
+                                    <th class="text-left pb-2 font-semibold">Biển Số</th>
+                                    <th class="text-right pb-2 font-semibold pr-2">TG Vi Phạm</th>
+                                    <th class="text-right pb-2 font-semibold pr-1 rounded-r">Ảnh</th>
+                                </tr>
+                            </thead>
+                            <tbody id="improperLogsBody" class="divide-y divide-slate-700/50">
+                                <tr><td colspan="4" class="py-4 text-center text-slate-400">Đang tải...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex flex-col gap-2 overflow-hidden">
+                        <div class="flex-1 min-h-0 overflow-y-auto">
+                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-2 sticky top-0 bg-slate-800/90 pb-1">Slot Hay Sử Dụng</p>
+                            <div id="slotFreqBars" class="space-y-2">
+                                <span class="text-slate-400 text-xs">Đang tải...</span>
+                            </div>
+                        </div>
+                        <div class="bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg shrink-0">
+                            <p class="text-[9px] text-rose-400 uppercase font-bold mb-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">schedule</span>
+                                Khung Giờ Cao Điểm (&lt;3 Slots)
+                            </p>
+                            <p class="text-sm font-bold text-rose-200" id="peakHourText">Đang tải...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Frequent Violators -->
+            <div class="col-span-3 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-col min-h-0 overflow-hidden">
+                <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
+                    <span class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-rose-500 text-lg">gavel</span>
+                        Xe Thường Xuyên Vi Phạm (&gt;5)
+                    </span>
+                    <a href="/api/export/frequent-violators.csv" class="text-[10px] text-rose-400 hover:underline uppercase font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">download</span>CSV
+                    </a>
+                </h3>
+                <div class="space-y-2 overflow-y-auto flex-1 pr-1" id="violatorsBody">
+                    <div class="text-center text-slate-400 text-sm py-4">Đang tải...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Match Dashboard -->
+        {% include 'components/footer.html' %}
+    </div>
+
+<!-- VIP Slots Modal -->
+<div id="vipModal" class="vip-modal">
+    <div class="vip-modal-content">
+        <div class="vip-modal-header">
+            <div class="vip-modal-title">
+                <span class="material-symbols-outlined text-yellow-500">star</span>
+                Quản Lý Slot Dành Cho VIP
+            </div>
+            <button onclick="toggleVipModal()" class="vip-modal-close">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+        </div>
+        <p class="text-sm text-slate-400 mb-4">Chọn các slot VIP (không cho phép người dùng thường đặt chỗ)</p>
+        <div id="vipSlotsCheckboxes" class="grid grid-cols-5 gap-3">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Socket.IO + Live data -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    // ── DateTime display ──────────────────────────────
+    function updateDatetime() {
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2, '0');
+        var m = String(now.getMinutes()).padStart(2, '0');
+        var s = String(now.getSeconds()).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        var mo = String(now.getMonth() + 1).padStart(2, '0');
+        var y = now.getFullYear();
+        var dateEl = document.getElementById('dateDisplay');
+        var timeEl = document.getElementById('timeDisplay');
+        if (dateEl) dateEl.textContent = d + '/' + mo + '/' + y;
+        if (timeEl) timeEl.textContent = h + ':' + m + ':' + s;
+    }
+    updateDatetime();
+    setInterval(updateDatetime, 1000);
+
+    // Initialize lucide icons
+    lucide.createIcons();
+
+    // ── VIP Modal Toggle ──────────
+    function toggleVipModal() {
+        var modal = document.getElementById('vipModal');
+        if (modal) {
+            modal.classList.toggle('active');
+        }
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        var modal = document.getElementById('vipModal');
+        if (e.target === modal) {
+            toggleVipModal();
+        }
+    });
+
+    // ── Socket.IO live KPIs ──────────────────────────────────
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var connected = false;
+
+    socket.on('connect', function() { connected = true; });
+    socket.on('disconnect', function() { connected = false; });
+
+    socket.on('update_status', function(data) {
+        var total    = data.total_spaces      || 0;
+        var occupied = data.occupied_spaces   || 0;
+        var avail    = data.available_spaces  || 0;
+        var overlap  = data.overlapping_vehicles_count || 0;
+        var outside  = data.outside_vehicles_count     || 0;
+
+        setText('kpi-total',       total);
+        setText('kpi-available',   avail);
+        setText('kpi-occupied',    occupied);
+        setText('kpi-overlapping', overlap);
+        setText('kpi-outside',     outside);
+
+        var pct = total > 0 ? Math.round(occupied / total * 100) : 0;
+        document.getElementById('occupancyPct').textContent = pct + '%';
+        document.getElementById('occupancyPctTitle').textContent = pct;
+        document.getElementById('occupancyRing').setAttribute('stroke-dasharray', pct + ', 100');
+        if (typeof fetchSlotStatus === 'function') fetchSlotStatus();
+    });
+
+    // Real-time VIP slots update
+    socket.on('vip_slots_updated', function(data) {
+        console.log('VIP slots updated:', data.slot_numbers);
+        fetchVipSlots();
+        fetchSlotStatus();
+    });
+
+    // Real-time reservation update
+    socket.on('reservation_created', function(data) {
+        console.log('Reservation created for slot:', data.slot_number);
+        fetchSlotStatus();
+    });
+
+    function setText(id, val) {
+        var el = document.getElementById(id);
+        if (el && el.textContent != String(val)) {
+            el.textContent = val;
+            el.classList.remove('kpi-pulse');
+            void el.offsetWidth;
+            el.classList.add('kpi-pulse');
+        }
+    }
+
+    // ── Gate Logs ──────────
+    function fetchGateLogs() {
+        fetch('/api/manager/gate-logs')
+            .then(function(r) { return r.json(); })
+            .then(function(logs) {
+                if (logs.error) return;
+                var tbody = document.getElementById('gateLogsBody');
+                if (!tbody) return;
+                if (!logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400">Chưa có dữ liệu</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = logs.map(function (log) {
+                    var ts = log.timestamp ? new Date(log.timestamp) : null;
+                    var time = ts ? String(ts.getHours()).padStart(2, '0') + ':' +
+                        String(ts.getMinutes()).padStart(2, '0') + ':' +
+                        String(ts.getSeconds()).padStart(2, '0') : '---';
+                    var dirBadge = log.direction === 'IN'
+                        ? '<span class="text-emerald-400 font-bold">IN</span>'
+                        : '<span class="text-rose-400 font-bold">OUT</span>';
+                    var imgCell = log.image_path
+                        ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path +
+                        '" style="height:22px;border-radius:3px;border:1px solid rgba(13,204,242,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
+                        : '&mdash;';
+                    return '<tr class="hover:bg-slate-700/20">' +
+                        '<td class="py-2 font-mono">' + (log.plate_text || '—') + '</td>' +
+                        '<td class="py-2">' + time + '</td>' +
+                        '<td class="py-2">' + dirBadge + '</td>' +
+                        '<td class="py-2 text-right">' + imgCell + '</td>' +
+                        '</tr>';
+                }).join('');
+            })
+            .catch(function () { });
+    }
+
+    // ── VIP Slots ──────────
+    function fetchVipSlots() {
+        fetch('/api/manager/vip-slots', { credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                var vipSet = new Set((data.slot_numbers || []).map(Number));
+                var container = document.getElementById('vipSlotsCheckboxes');
+                if (!container) return;
+                container.innerHTML = '';
+                for (var i = 1; i <= 19; i++) {
+                    var cb = document.createElement('label');
+                    cb.className = 'flex items-center gap-2 px-4 py-3 rounded-lg border cursor-pointer transition-all ' +
+                        (vipSet.has(i) ? 'border-yellow-500/50 bg-yellow-500/20 text-yellow-400' : 'border-slate-700/60 bg-slate-800/40 hover:border-slate-600 text-slate-300');
+                    var input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.checked = vipSet.has(i);
+                    input.dataset.slot = i;
+                    input.className = 'rounded w-4 h-4';
+                    input.onchange = function() {
+                        var all = document.querySelectorAll('#vipSlotsCheckboxes input[type=checkbox]');
+                        var checked = [];
+                        all.forEach(function(el) { if (el.checked) checked.push(parseInt(el.dataset.slot)); });
+                        fetch('/api/manager/vip-slots', {
+                            method: 'PUT',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slot_numbers: checked })
+                        }).then(function(res) { return res.json(); })
+                          .then(function() { fetchVipSlots(); })
+                          .catch(function() {});
+                    };
+                    var label = document.createElement('span');
+                    label.className = 'font-mono font-bold text-sm';
+                    label.textContent = 'Slot ' + i;
+                    cb.appendChild(input);
+                    cb.appendChild(label);
+                    container.appendChild(cb);
+                }
+            })
+            .catch(function() {});
+    }
+
+    // ── Slot Status Grid ──────────
+    function fetchSlotStatus() {
+        fetch('/api/parking/slots')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                var slots = data.slots || [];
+                var grid = document.getElementById('slotGrid');
+                if (!grid) return;
+                if (!slots.length) {
+                    grid.innerHTML = '<div class="text-center text-slate-400 text-sm py-8">Chưa có dữ liệu</div>';
+                    return;
+                }
+                // Determine grid columns from number of slots
+                var cols = Math.min(10, Math.max(5, Math.ceil(Math.sqrt(slots.length * 2.5))));
+                var rows = Math.ceil(slots.length / cols);
+                grid.innerHTML = '<div class="grid gap-2 h-full" style="grid-template-columns: repeat(' + cols + ', 1fr); grid-template-rows: repeat(' + rows + ', 1fr);">' +
+                    slots.map(function(s) {
+                        var occupied = s.status === 'occupied';
+                        var isHijacked = s.is_hijacked;
+                        var isVip = s.is_vip;
+                        var reserved = s.reservation && !occupied;
+                        var isWarning = s.parking_type === 'overlap' || s.parking_type === 'outside';
+                        var cls = '';
+                        var statusBadge = '';
+                        var tooltip = '';
+                        
+                        // Priority order: Hijacked > Warning > Occupied > VIP > Reserved > Empty
+                        if (isHijacked) {
+                            cls = 'border-rose-500/50 bg-rose-500/10 text-rose-500 hover:border-rose-500 animate-pulse';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-500/20 text-rose-400">Bị chiếm</span>';
+                            tooltip = s.reservation ? 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '';
+                        } else if (isWarning) {
+                            cls = 'border-amber-500/50 bg-amber-500/10 text-amber-500 hover:border-amber-500';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/20 text-amber-400">Cảnh Báo</span>';
+                        } else if (occupied) {
+                            cls = 'border-primary/40 bg-primary/10 text-primary hover:border-primary/60';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-primary/20 text-primary">Có Xe</span>';
+                            if (s.reservation) tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            else if (s.plate) tooltip = 'Biển số: ' + s.plate;
+                        } else if (isVip) {
+                            // VIP slot - show as VIP (yellow) even if reserved (VIP has priority)
+                            cls = 'border-yellow-500/50 bg-yellow-500/10 text-yellow-500 hover:border-yellow-500';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-yellow-500/20 text-yellow-400">VIP</span>';
+                            if (reserved) {
+                                tooltip = 'Slot VIP - Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            } else {
+                                tooltip = 'Slot VIP - Chỉ quản lý đặt được';
+                            }
+                        } else if (reserved) {
+                            // Regular slot with reservation - show as RESERVED (blue)
+                            cls = 'border-blue-500/50 bg-blue-500/10 text-blue-400 hover:border-blue-500';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-blue-500/20 text-blue-400">Đã đặt</span>';
+                            tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                        } else {
+                            // Empty slot - show as AVAILABLE (green)
+                            cls = 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400">Trống</span>';
+                        }
+                        
+                        var plate = s.plate ? s.plate : '—';
+                        
+                        return '<div class="border ' + cls + ' text-[10px] rounded-lg p-2.5 flex flex-col items-center justify-center gap-1 transition-colors" title="' + (tooltip || '').replace(/"/g, '&quot;') + '">' +
+                               '<span class="text-xs font-mono font-medium text-slate-400">Slot ' + s.slot_number + '</span>' +
+                               '<strong class="text-sm font-mono tracking-wider font-bold text-white my-0.5">' + plate + '</strong>' +
+                               statusBadge +
+                               '</div>';
+                    }).join('') +
+                    '</div>';
+            })
+            .catch(function () { });
+    }
+
+    // ── Improper Logs ──────────
+    function fetchImproperLogs() {
+        fetch('/api/manager/improper-parking-logs')
+            .then(function(r) { return r.json(); })
+            .then(function(logs) {
+                if (logs.error) return;
+                var tbody = document.getElementById('improperLogsBody');
+                if (!logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400 text-xs">Chưa có dữ liệu</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = logs.map(function(log) {
+                    var location = log.event_type === 'outside' ? 'Lối Đi' : 'Slot ' + (log.slot_number || '—');
+                    var ts = log.timestamp ? new Date(log.timestamp) : null;
+                    var duration = '—';
+                    if (ts) {
+                        var diffMs = Date.now() - ts.getTime();
+                        var diffMin = Math.floor(diffMs / 60000);
+                        if (diffMin < 60) duration = diffMin + 'p';
+                        else duration = Math.floor(diffMin / 60) + 'h';
+                    }
+                    
+                    var imgCell = log.image_path
+                        ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path + '" style="height:22px;border-radius:3px;border:1px solid rgba(245,158,11,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
+                        : '&mdash;';
+                        
+                    return '<tr class="text-amber-200 hover:bg-slate-700/20">' +
+                        '<td class="py-2 pl-2">' + location + '</td>' +
+                        '<td class="py-2 font-mono">' + (log.plate_text || '—') + '</td>' +
+                        '<td class="py-2 text-center">' + duration + '</td>' +
+                        '<td class="py-2 pr-2 text-right">' + imgCell + '</td>' +
+                        '</tr>';
+                }).join('');
+            })
+            .catch(function() {});
+    }
+
+    // ── Hourly Traffic Chart ─────────────────────
+    var trafficCtx = document.getElementById('hourlyTrafficChart').getContext('2d');
+    var hourlyChart = new Chart(trafficCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                { label: 'Vào', data: [], backgroundColor: 'rgba(13, 204, 242, 0.5)', borderRadius: 2 },
+                { label: 'Ra', data: [], backgroundColor: 'rgba(13, 204, 242, 0.2)', borderRadius: 2 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15,23,42,0.9)', titleFont: { size: 10 }, bodyFont: { size: 9 }, padding: 6, cornerRadius: 4 } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 8 } } },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+
+    function fetchHourlyTraffic() {
+        fetch('/api/manager/hourly-traffic')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                hourlyChart.data.labels = data.labels;
+                hourlyChart.data.datasets[0].data = data.in;
+                hourlyChart.data.datasets[1].data = data.out;
+                hourlyChart.update();
+            })
+            .catch(function() {});
+    }
+
+    // ── Slot Frequency (Bar display, no chart) ─────────────────────
+    function fetchSlotFrequency() {
+        fetch('/api/manager/slot-frequency')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                var items = data.week || data.month || [];
+                var container = document.getElementById('slotFreqBars');
+                if (!items.length) {
+                    container.innerHTML = '<span class="text-slate-400 text-xs">Chưa có dữ liệu</span>';
+                    return;
+                }
+                var top = items.slice(0, 3);
+                var maxCount = top.reduce(function(mx, i) { return Math.max(mx, i.count); }, 1);
+                container.innerHTML = top.map(function(i) {
+                    var pct = Math.round(i.count / maxCount * 100);
+                    return '<div class="flex items-center gap-2 text-xs">' +
+                        '<span class="w-6 font-bold">' + i.slot_number + '</span>' +
+                        '<div class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">' +
+                        '<div class="h-full bg-primary transition-all" style="width: ' + pct + '%"></div>' +
+                        '</div>' +
+                        '<span class="text-[10px]">' + pct + '%</span>' +
+                        '</div>';
+                }).join('');
+            })
+            .catch(function() {});
+    }
+
+    // ── Frequent Violators ──────────────────────────
+    function fetchFrequentViolators() {
+        fetch('/api/manager/frequent-violators')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                var container = document.getElementById('violatorsBody');
+                if (!data.length) {
+                    container.innerHTML = '<div class="text-center text-emerald-400 text-sm py-4 font-bold">Không có xe nào vi phạm trên 5 lần</div>';
+                    return;
+                }
+                container.innerHTML = data.map(function(v) {
+                    var plateCell = v.plate_text === 'Không nhận dạng'
+                        ? '<span class="italic text-orange-400">' + v.plate_text + '</span>'
+                        : v.plate_text;
+                    var latest = v.events && v.events[0] ? v.events[0] : {};
+                    var desc = latest.event_type === 'outside' ? 'Đậu ngoài slot' : 'Đậu lấn ô';
+                    
+                    var imgDisplay = latest.image_path
+                        ? '<a href="' + latest.image_path + '" target="_blank"><img src="' + latest.image_path + '" class="h-6 w-auto rounded border border-rose-500/30 ml-2 object-cover" onerror="this.style.display=\'none\'"></a>'
+                        : '';
+                        
+                    return '<div class="flex items-center justify-between p-2 bg-slate-700/30 rounded border-l-2 border-l-rose-500 hover:bg-slate-700/50 transition-colors">' +
+                        '<div class="flex items-center gap-2">' +
+                        '  <div>' +
+                        '    <p class="text-xs font-mono font-bold tracking-widest">' + plateCell + '</p>' +
+                        '    <p class="text-[9px] text-slate-400">' + desc + '</p>' +
+                        '  </div>' + imgDisplay +
+                        '</div>' +
+                        '<div class="text-right">' +
+                        '<span class="text-lg font-bold text-rose-500">' + v.count + '</span>' +
+                        '<span class="text-[9px] text-slate-400 block uppercase leading-none">Lần</span>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+            })
+            .catch(function() {});
+    }
+
+    // ── Low Availability Hours ──────────────────
+    function fetchLowAvailability() {
+        fetch('/api/manager/low-availability-hours')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) return;
+                var info = data.week || data.month;
+                if (!info) return;
+                var flagged = info.flagged_hours || [];
+                var peakEl = document.getElementById('peakHourText');
+                if (!flagged.length) {
+                    peakEl.innerHTML = '<span class="text-emerald-400">Không có khung giờ cao điểm</span>';
+                } else {
+                    var hours = flagged.map(function(f) { return f.hour; });
+                    peakEl.textContent = hours[0] + ' — ' + hours[hours.length - 1];
+                }
+            })
+            .catch(function() {});
+    }
+
+    // ── Initial fetch + polling ───────────────────────────
+    fetchGateLogs();
+    fetchSlotStatus();
+    fetchVipSlots();  // Load VIP slots immediately on page load
+    fetchImproperLogs();
+    fetchHourlyTraffic();
+    fetchSlotFrequency();
+    fetchFrequentViolators();
+    fetchLowAvailability();
+
+    setInterval(fetchVipSlots, 60000);
+    setInterval(fetchGateLogs, 3000);
+    setInterval(fetchSlotStatus, 3000);
+    setInterval(fetchImproperLogs, 3000);
+    setInterval(fetchHourlyTraffic, 15000);
+    setInterval(fetchSlotFrequency, 30000);
+    setInterval(fetchFrequentViolators, 30000);
+    setInterval(fetchLowAvailability, 30000);
+</script>
+</body>
+
+</html>

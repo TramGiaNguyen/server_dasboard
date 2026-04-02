@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Giám Sát Bãi Xe - BDU Smart Parking</title>
+    <meta name="description" content="Hệ thống giám sát bãi đỗ xe thông minh - Đại học Bình Dương">
+
+    <!-- Google Fonts: Inter & Fira Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Chart.js + DataLabels -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+    <style>
+        /* ============================================
+           DESIGN TOKENS - Glassmorphism Dark Theme
+           ============================================ */
+        :root {
+            --color-bg: #0a0f1e;
+            --color-primary: #0d1b35;
+            --color-secondary: #162040;
+            --color-accent: #00c6ff;
+            --color-accent-2: #7c3aed;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-text: #f0f4ff;
+            --color-text-muted: #8b9dc3;
+
+            --glass-bg: rgba(13, 27, 53, 0.5);
+            --glass-border: 1px solid rgba(0, 198, 255, 0.12);
+            --glass-blur: 14px;
+
+            --space-xs: 4px;
+            --space-sm: 6px;
+            --space-md: 12px;
+            --space-lg: 16px;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+
+            --shadow-glow: 0 0 20px rgba(0, 198, 255, 0.15);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+            --transition-fast: 150ms ease;
+            --transition-normal: 300ms ease;
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.4;
+        }
+
+        /* ============================================
+           ANIMATED BACKGROUND
+           ============================================ */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-orb-1 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(0, 198, 255, 0.15), transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation: drift 22s infinite alternate;
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.15), transparent 70%);
+            bottom: -100px;
+            right: -100px;
+            animation: drift 28s infinite alternate-reverse;
+        }
+
+        .bg-orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.08), transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: drift 35s infinite alternate;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(60px, 40px); }
+        }
+
+        /* ============================================
+           GLASS PANEL
+           ============================================ */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: var(--glass-border);
+            box-shadow: var(--shadow-card);
+            border-radius: var(--radius-md);
+        }
+
+        /* ============================================
+           HEADER — Compact
+           ============================================ */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            margin: 8px 12px 0;
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .header-logo {
+            width: 36px;
+            height: auto;
+            border-radius: var(--radius-sm);
+            filter: drop-shadow(0 0 8px rgba(0, 198, 255, 0.4));
+        }
+
+        .header-identity h1 {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .header-identity p {
+            font-size: 0.65rem;
+            color: var(--color-text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--color-success);
+            letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-success);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+        }
+
+        .datetime-display {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* ============================================
+           STAT CARDS — Compact Row
+           ============================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+
+        .stat-card {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all var(--transition-normal);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-accent)), transparent);
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow), var(--shadow-card);
+        }
+
+        .stat-card.warning { --card-accent: var(--color-warning); }
+        .stat-card.danger { --card-accent: var(--color-danger); }
+        .stat-card.success { --card-accent: var(--color-success); }
+
+        .stat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 198, 255, 0.1);
+            color: var(--color-accent);
+            flex-shrink: 0;
+        }
+
+        .stat-card.warning .stat-icon { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
+        .stat-card.danger .stat-icon { background: rgba(239, 68, 68, 0.1); color: var(--color-danger); }
+        .stat-card.success .stat-icon { background: rgba(34, 197, 94, 0.1); color: var(--color-success); }
+
+        .stat-icon i { width: 17px; height: 17px; }
+
+        .stat-info { min-width: 0; }
+
+        .stat-label {
+            font-size: 0.62rem;
+            font-weight: 500;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            line-height: 1.2;
+        }
+
+        .stat-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--color-accent);
+            line-height: 1.1;
+        }
+
+        .stat-card.warning .stat-value { color: var(--color-warning); }
+        .stat-card.danger .stat-value { color: var(--color-danger); }
+        .stat-card.success .stat-value { color: var(--color-success); }
+
+        /* ============================================
+           MAIN CONTENT — 12 Column Grid, fills viewport
+           ============================================ */
+        .main-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 7fr 5fr;
+            gap: 10px;
+            padding: 0 12px 8px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* ---- Left Column: Videos top + Tabs bottom ---- */
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .video-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: var(--radius-md);
+        }
+
+        .video-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 12px;
+            background: rgba(13, 27, 53, 0.8);
+            border-bottom: 1px solid rgba(0, 198, 255, 0.08);
+        }
+
+        .video-header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .video-header-left .rec-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-danger);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .video-header-right {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.6rem;
+            color: var(--color-text-muted);
+        }
+
+        .video-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* ---- Side-by-Side Tables ---- */
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.65rem;
+            text-align: left;
+        }
+
+        .db-table th {
+            font-family: 'Fira Code', monospace;
+            padding: 5px 4px;
+            border-bottom: 1px solid rgba(0, 198, 255, 0.15);
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .db-table td {
+            padding: 5px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            vertical-align: middle;
+        }
+
+        .db-table tr:hover td {
+            background: rgba(0, 198, 255, 0.03);
+        }
+
+        /* ---- Right Column: Chart top + Slot Grid bottom ---- */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .chart-panel {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .chart-panel-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 6px;
+        }
+
+        .chart-panel-title i {
+            width: 15px;
+            height: 15px;
+            color: var(--color-accent);
+        }
+
+        .chart-wrap {
+            width: 130px;
+            height: 130px;
+            flex-shrink: 0;
+        }
+
+        .chart-legend {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .chart-legend-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chart-legend-label {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+        }
+
+        .chart-legend-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        /* ---- Slot Grid ---- */
+        .slot-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .slot-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            flex-shrink: 0;
+        }
+
+        .slot-panel-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .slot-panel-title i {
+            width: 15px;
+            height: 15px;
+            color: var(--color-accent);
+        }
+
+        .slot-legend {
+            display: flex;
+            gap: 12px;
+        }
+
+        .slot-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6rem;
+            color: var(--color-text-muted);
+        }
+
+        .slot-legend-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+        }
+
+        .slot-grid-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 10px 10px;
+        }
+
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 6px;
+        }
+
+        .slot-card {
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(13, 27, 53, 0.6);
+            border: 1px solid rgba(0, 198, 255, 0.08);
+            transition: var(--transition-fast);
+            text-align: center;
+        }
+
+        .slot-card:hover {
+            border-color: rgba(0, 198, 255, 0.25);
+        }
+
+        .slot-card.occupied {
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .slot-card.parked-outside {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .slot-card.reserved {
+            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .slot-card.vip {
+            border-color: rgba(234, 179, 8, 0.5);
+            background: rgba(234, 179, 8, 0.1);
+        }
+
+        .slot-card.hijacked {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+            animation: slot-hijack-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes slot-hijack-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.4); }
+        }
+
+        .slot-card-num {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.62rem;
+            color: var(--color-text-muted);
+            margin-bottom: 2px;
+        }
+
+        .slot-card-plate {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slot-card-status {
+            margin-top: 3px;
+        }
+
+        /* ---- DB Table ---- */
+        .db-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.72rem;
+        }
+
+        .db-table th {
+            text-align: left;
+            padding: 6px 8px;
+            font-weight: 600;
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-muted);
+            border-bottom: 1px solid rgba(0, 198, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background: rgba(13, 27, 53, 0.95);
+            z-index: 1;
+        }
+
+        .db-table td {
+            padding: 5px 8px;
+            color: var(--color-text);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+        }
+
+        .db-table tr:hover td {
+            background: rgba(0, 198, 255, 0.04);
+        }
+
+        /* ---- Badges ---- */
+        .badge {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .badge-in { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .badge-out { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .badge-free { background: rgba(0, 198, 255, 0.1); color: var(--color-accent); }
+        .badge-occupied { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+        /* ============================================
+           FOOTER — Compact
+           ============================================ */
+        .footer-strip {
+            text-align: center;
+            padding: 5px 12px;
+            font-size: 0.62rem;
+            color: var(--color-text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+        }
+
+        .footer-strip span {
+            color: var(--color-accent);
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* ============================================
+           SCROLLBAR
+           ============================================ */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 198, 255, 0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 198, 255, 0.35); }
+
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        @media (prefers-reduced-motion: reduce) {
+            .bg-orb, .live-dot, .rec-dot { animation: none; }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================
+           RESPONSIVE — Tablets / Small Screens
+           ============================================ */
+        @media (max-width: 1200px) {
+            body { overflow: auto; height: auto; }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+                overflow: visible;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .video-row {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .chart-wrap {
+                width: 200px;
+                height: 200px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-wrap: wrap;
+                gap: var(--space-sm);
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background Orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Header -->
+    {% include 'components/header.html' %}
+
+    <!-- Stat Cards -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon"><i data-lucide="layout-grid"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Tổng Vị Trí</div>
+                <div class="stat-value" id="total_spaces">0</div>
+            </div>
+        </div>
+        <div class="stat-card glass-panel success">
+            <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Khả Dụng</div>
+                <div class="stat-value" id="available_spaces">0</div>
+            </div>
+        </div>
+        <div class="stat-card glass-panel">
+            <div class="stat-icon"><i data-lucide="car"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Đã Sử Dụng</div>
+                <div class="stat-value" id="occupied_spaces">0</div>
+            </div>
+        </div>
+        <div class="stat-card glass-panel warning">
+            <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Đậu Lấn Ô</div>
+                <div class="stat-value" id="overlapping_vehicles_count">0</div>
+            </div>
+        </div>
+        <div class="stat-card glass-panel danger">
+            <div class="stat-icon"><i data-lucide="x-circle"></i></div>
+            <div class="stat-info">
+                <div class="stat-label">Đậu Ngoài</div>
+                <div class="stat-value" id="outside_vehicles_count">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-grid fade-in">
+        <!-- ====== LEFT COLUMN: Videos + Tabbed Tables ====== -->
+        <div class="left-col">
+            <!-- Two Video Feeds Side by Side -->
+            <div class="video-row">
+                <!-- Camera Bãi Xe -->
+                <div class="video-section glass-panel" style="padding:0;">
+                    <div class="video-header">
+                        <span class="video-header-left">
+                            <span class="rec-dot"></span>
+                            CAM-01: Bãi Xe
+                        </span>
+                        <span class="video-header-right">LIVE</span>
+                    </div>
+                    <div class="video-wrapper">
+                        <img id="videoParking" src="/video_feed" alt="Camera Bãi Xe">
+                    </div>
+                </div>
+
+                <!-- Camera Cổng -->
+                <div class="video-section glass-panel" style="padding:0;">
+                    <div class="video-header">
+                        <span class="video-header-left">
+                            <span class="rec-dot"></span>
+                            CAM-02: Cổng Vào
+                        </span>
+                        <span class="video-header-right">LIVE</span>
+                    </div>
+                    <div class="video-wrapper">
+                        <img id="videoGate" src="/video_feed_gate" alt="Camera Cổng">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Tables: Gate Logs / Improper Parking Logs -->
+            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; overflow: hidden;">
+                <!-- Gate Logs Table -->
+                <div class="glass-panel" style="display: flex; flex-direction: column; overflow: hidden;">
+                    <div style="padding: 8px 12px; border-bottom: 1px solid rgba(0, 198, 255, 0.1); flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 600; color: var(--color-text);">
+                        <i data-lucide="log-in" style="width: 14px; height: 14px; color: var(--color-accent);"></i>
+                        Lịch Sử Ra / Vào
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 4px 8px;">
+                        <table class="db-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Biển số</th>
+                                    <th>Hướng</th>
+                                    <th>Ảnh</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gateLogsBody">
+                                <tr>
+                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Improper Parking Logs Table -->
+                <div class="glass-panel" style="display: flex; flex-direction: column; overflow: hidden;">
+                    <div style="padding: 8px 12px; border-bottom: 1px solid rgba(0, 198, 255, 0.1); flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 600; color: var(--color-text);">
+                        <i data-lucide="triangle-alert" style="width: 14px; height: 14px; color: var(--color-warning);"></i>
+                        Lịch Sử Đậu Sai
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 4px 8px;">
+                        <table class="db-table" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Biển số</th>
+                                    <th>Loại</th>
+                                    <th>Ảnh</th>
+                                </tr>
+                            </thead>
+                            <tbody id="improperLogsBody">
+                                <tr>
+                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== RIGHT COLUMN: Chart + Slot Grid ====== -->
+        <div class="right-col">
+            <!-- Donut Chart + Legend -->
+            <div class="chart-panel glass-panel">
+                <div>
+                    <div class="chart-panel-title">
+                        <i data-lucide="pie-chart"></i>
+                        Phân Tích Trạng Thái
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="parkingChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-legend">
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-item-left">
+                            <span class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></span>
+                            <span class="chart-legend-label">Đậu đúng</span>
+                        </div>
+                        <span class="chart-legend-value" id="legendProperlyParked">0</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-item-left">
+                            <span class="chart-legend-dot" style="background:rgba(245,158,11,0.8)"></span>
+                            <span class="chart-legend-label">Đậu lấn ô</span>
+                        </div>
+                        <span class="chart-legend-value" id="legendOverlapping">0</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-item-left">
+                            <span class="chart-legend-dot" style="background:rgba(0,198,255,0.8)"></span>
+                            <span class="chart-legend-label">Khả dụng</span>
+                        </div>
+                        <span class="chart-legend-value" id="legendAvailable">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slot Grid -->
+            <div class="slot-panel glass-panel">
+                <div class="slot-panel-header">
+                    <div class="slot-panel-title">
+                        <i data-lucide="grid-3x3"></i>
+                        Trạng Thái Slot
+                    </div>
+                    <div class="slot-legend">
+                        <div class="slot-legend-item">
+                            <span class="slot-legend-dot" style="background:var(--color-accent)"></span>
+                            Trống
+                        </div>
+                        <div class="slot-legend-item">
+                            <span class="slot-legend-dot" style="background:#3b82f6"></span>
+                            Đã đặt
+                        </div>
+                        <div class="slot-legend-item">
+                            <span class="slot-legend-dot" style="background:#eab308"></span>
+                            VIP
+                        </div>
+                        <div class="slot-legend-item">
+                            <span class="slot-legend-dot" style="background:var(--color-warning)"></span>
+                            Có xe
+                        </div>
+                        <div class="slot-legend-item">
+                            <span class="slot-legend-dot" style="background:var(--color-danger)"></span>
+                            Bị chiếm
+                        </div>
+                    </div>
+                </div>
+                <div class="slot-grid-body">
+                    <div class="slot-grid" id="slotGrid">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    {% include 'components/footer.html' %}
+
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <!-- VIP Notification System -->
+    <script src="{{ url_for('static', filename='js/vip_notification.js') }}"></script>
+    
+    <script>
+        // ── DateTime display ──────────────────────────────
+        function updateDatetime() {
+            var now = new Date();
+            var h = String(now.getHours()).padStart(2, '0');
+            var m = String(now.getMinutes()).padStart(2, '0');
+            var s = String(now.getSeconds()).padStart(2, '0');
+            var d = String(now.getDate()).padStart(2, '0');
+            var mo = String(now.getMonth() + 1).padStart(2, '0');
+            var y = now.getFullYear();
+            var dateEl = document.getElementById('dateDisplay');
+            var timeEl = document.getElementById('timeDisplay');
+            if (dateEl) dateEl.textContent = d + '/' + mo + '/' + y;
+            if (timeEl) timeEl.textContent = h + ':' + m + ':' + s;
+        }
+        updateDatetime();
+        setInterval(updateDatetime, 1000);
+
+
+
+        // ── Socket.IO ─────────────────────────────────────
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('update_status', function (data) {
+            document.getElementById('total_spaces').innerText = data.total_spaces;
+            document.getElementById('occupied_spaces').innerText = data.occupied_spaces;
+            document.getElementById('available_spaces').innerText = data.available_spaces;
+            document.getElementById('overlapping_vehicles_count').innerText = data.overlapping_vehicles_count || 0;
+            document.getElementById('outside_vehicles_count').innerText = data.outside_vehicles_count;
+
+            var properly_parked = data.occupied_spaces - (data.overlapping_vehicles_count || 0);
+
+            // Update chart legend
+            document.getElementById('legendProperlyParked').innerText = properly_parked;
+            document.getElementById('legendOverlapping').innerText = data.overlapping_vehicles_count || 0;
+            document.getElementById('legendAvailable').innerText = data.available_spaces;
+
+            parkingChart.data.datasets[0].data = [
+                properly_parked,
+                data.overlapping_vehicles_count || 0,
+                data.available_spaces
+            ];
+            parkingChart.update();
+            fetchSlotStatus();
+        });
+
+        // Real-time VIP slots update
+        socket.on('vip_slots_updated', function(data) {
+            console.log('VIP slots updated:', data.slot_numbers);
+            
+            // Show notification popup
+            if (window.vipNotification && data.slot_numbers && data.slot_numbers.length > 0) {
+                window.vipNotification.show(data.slot_numbers);
+            }
+            
+            fetchSlotStatus();
+        });
+
+        // Real-time reservation update
+        socket.on('reservation_created', function(data) {
+            console.log('Reservation created for slot:', data.slot_number);
+            fetchSlotStatus();
+        });
+
+        // ── Donut Chart ───────────────────────────────────
+        var ctx = document.getElementById('parkingChart').getContext('2d');
+        var parkingChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Đậu Đúng', 'Đậu Lấn Ô', 'Khả Dụng'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(0, 198, 255, 0.8)'
+                    ],
+                    hoverBackgroundColor: [
+                        'rgba(34, 197, 94, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(0, 198, 255, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: 'rgba(10, 15, 30, 0.8)',
+                    hoverBorderColor: 'rgba(255,255,255,0.3)',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                animation: { animateScale: true, animateRotate: true, duration: 600 },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#f0f4ff',
+                        font: { weight: 'bold', size: 11, family: "'Fira Code', monospace" },
+                        formatter: function (value) { return value > 0 ? value : ''; }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        // ── DB Polling (Gate Logs + Slot Status + Improper Logs) ──
+        function fetchGateLogs() {
+            fetch('/api/db/gate-logs')
+                .then(function (r) { return r.json(); })
+                .then(function (logs) {
+                    if (logs.error) return;
+                    var tbody = document.getElementById('gateLogsBody');
+                    if (!logs.length) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">Chưa có dữ liệu</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = logs.map(function (log) {
+                        var ts = log.timestamp ? new Date(log.timestamp) : null;
+                        var time = ts ? String(ts.getDate()).padStart(2, '0') + '/' +
+                            String(ts.getMonth() + 1).padStart(2, '0') + '/' +
+                            ts.getFullYear() + ' ' +
+                            String(ts.getHours()).padStart(2, '0') + ':' +
+                            String(ts.getMinutes()).padStart(2, '0') + ':' +
+                            String(ts.getSeconds()).padStart(2, '0') : '---';
+                        var dirBadge = log.direction === 'IN'
+                            ? '<span class="badge badge-in">VÀO</span>'
+                            : '<span class="badge badge-out">RA</span>';
+                        var imgCell = log.image_path
+                            ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path + '" style="height:28px;border-radius:3px;border:1px solid rgba(0,198,255,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
+                            : '&mdash;';
+                        return '<tr>' +
+                            '<td>' + time + '</td>' +
+                            '<td>' + log.plate_text + '</td>' +
+                            '<td>' + dirBadge + '</td>' +
+                            '<td>' + imgCell + '</td>' +
+                            '</tr>';
+                    }).join('');
+                })
+                .catch(function () { });
+        }
+
+        function fetchSlotStatus() {
+            fetch('/api/parking/slots')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.error) return;
+                    var slots = data.slots || [];
+                    var grid = document.getElementById('slotGrid');
+                    grid.innerHTML = slots.map(function (s) {
+                        var cls = 'slot-card';
+                        var statusBadge = '';
+                        var tooltip = '';
+                        
+                        // Priority: Hijacked > Occupied > VIP > Reserved > Empty
+                        if (s.is_hijacked) {
+                            cls += ' hijacked';
+                            statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">Bị chiếm</span>';
+                            tooltip = 'Cảnh báo: Slot đã đặt nhưng xe khác đậu. ' + (s.reservation ? 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '');
+                        } else if (s.status === 'occupied') {
+                            cls += ' occupied';
+                            statusBadge = '<span class="badge badge-occupied">Có xe</span>';
+                            if (s.reservation) {
+                                tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            } else if (s.plate) {
+                                tooltip = 'Biển số: ' + s.plate;
+                            }
+                        } else if (s.is_vip) {
+                            // VIP slot - show as VIP (yellow) even if reserved
+                            cls += ' vip';
+                            statusBadge = '<span class="badge" style="background:rgba(234,179,8,0.2);color:#eab308;">VIP</span>';
+                            if (s.reservation) {
+                                tooltip = 'Slot VIP - Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            } else {
+                                tooltip = 'Slot VIP - Chỉ quản lý đặt được';
+                            }
+                        } else if (s.reservation) {
+                            // Regular slot with reservation
+                            cls += ' reserved';
+                            statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;">Đã đặt</span>';
+                            tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                        } else {
+                            // Empty slot - show as AVAILABLE
+                            statusBadge = '<span class="badge badge-free">Trống</span>';
+                        }
+                        var plate = s.plate ? s.plate : '—';
+                        return '<div class="' + cls + '" title="' + (tooltip || '').replace(/"/g, '&quot;') + '">' +
+                            '<div class="slot-card-num">Slot ' + s.slot_number + '</div>' +
+                            '<div class="slot-card-plate">' + plate + '</div>' +
+                            '<div class="slot-card-status">' + statusBadge + '</div>' +
+                            '</div>';
+                    }).join('');
+                })
+                .catch(function () { });
+        }
+
+        function fetchImproperLogs() {
+            fetch('/api/db/improper-parking-logs')
+                .then(function (r) { return r.json(); })
+                .then(function (logs) {
+                    if (logs.error) return;
+                    var tbody = document.getElementById('improperLogsBody');
+                    if (!logs.length) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">Chưa có dữ liệu</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = logs.map(function (log) {
+                        var ts = log.timestamp ? new Date(log.timestamp) : null;
+                        var time = ts ? String(ts.getDate()).padStart(2, '0') + '/' +
+                            String(ts.getMonth() + 1).padStart(2, '0') + '/' +
+                            ts.getFullYear() + ' ' +
+                            String(ts.getHours()).padStart(2, '0') + ':' +
+                            String(ts.getMinutes()).padStart(2, '0') + ':' +
+                            String(ts.getSeconds()).padStart(2, '0') : '---';
+                        var badge = log.event_type === 'outside'
+                            ? '<span class="badge badge-out">Ngoài slot</span>'
+                            : '<span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">Lấn ô</span>';
+                        var imgCell = log.image_path
+                            ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path + '" style="height:28px;border-radius:3px;border:1px solid rgba(0,198,255,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
+                            : '&mdash;';
+                        return '<tr>' +
+                            '<td>' + time + '</td>' +
+                            '<td>' + log.plate_text + '</td>' +
+                            '<td>' + badge + '</td>' +
+                            '<td>' + imgCell + '</td>' +
+                            '</tr>';
+                    }).join('');
+                })
+                .catch(function () { });
+        }
+
+        // Initial fetch + poll every 3s
+        fetchGateLogs();
+        fetchSlotStatus();
+        fetchImproperLogs();
+        setInterval(fetchGateLogs, 3000);
+        setInterval(fetchSlotStatus, 3000);
+        setInterval(fetchImproperLogs, 3000);
+
+        // ── Lucide Icons ──────────────────────────────────
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

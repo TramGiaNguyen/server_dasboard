@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment — NEVER commit secrets
+.env
+.env.local
+.env.*.local
+
+# Models — download pretrained weights separately for production
+# Keep empty placeholder directories, ignore everything else in these folders
+static/models/*
+!static/models/.gitkeep
+services/ocr/LicensePlate_OCR_Standalone/models/*
+!services/ocr/LicensePlate_OCR_Standalone/models/.gitkeep
+
+# All model files
+*.pt
+*.onnx
+*.pth
+*.h5
+*.ckpt
+*.tflite
+
+# Media captures
+static/captures/
+static/improper_captures/
+static/gate_captures/
+static/parking_captures/
+static/video/
+captures/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives (build artifacts)
+*.rar
+*.zip
+
+# Coverage
+htmlcov/
+.coverage
+.pytest_cache/

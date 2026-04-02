@@ -1,0 +1,335 @@
+/* ============================================
+   SMART PARKING DASHBOARD - GLASSMORPHISM THEME
+   ============================================ */
+
+:root {
+    /* Color Palette - Industrial IoT / Glassmorphism */
+    --color-primary: #1E293B;  /* Slate 800 */
+    --color-secondary: #334155; /* Slate 700 */
+    --color-cta: #22C55E;      /* Green 500 */
+    --color-cta-hover: #16A34A; /* Green 600 */
+    --color-danger: #EF4444;   /* Red 500 */
+    --color-warning: #F59E0B;  /* Amber 500 */
+    --color-info: #3B82F6;     /* Blue 500 */
+    --color-background: #0F172A; /* Slate 900 */
+    --color-text: #F8FAFC;     /* Slate 50 */
+    --color-text-muted: #94A3B8; /* Slate 400 */
+    
+    /* Glass Effect Variables */
+    --glass-bg: rgba(30, 41, 59, 0.4);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-blur: 12px;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    /* Shadows */
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px rgba(0,0,0,0.2);
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+}
+
+/* Reset & Base Styles */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Animated Background Gradients */
+.bg-gradient-1, .bg-gradient-2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.bg-gradient-1 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--color-cta), transparent);
+    top: -200px;
+    left: -200px;
+    animation: drift 20s infinite alternate;
+}
+
+.bg-gradient-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--color-info), transparent);
+    bottom: -100px;
+    right: -100px;
+    animation: drift 25s infinite alternate-reverse;
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(50px, 30px); }
+}
+
+.app-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: var(--space-md);
+}
+
+/* Components */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-lg);
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    margin-bottom: var(--space-lg);
+    position: sticky;
+    top: var(--space-md);
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.logo img {
+    height: 40px;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-text h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.2;
+}
+
+.logo-text span {
+    font-size: 0.8rem;
+    color: var(--color-cta);
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+}
+.status-dot.online { background-color: var(--color-cta); color: var(--color-cta); }
+.status-dot.offline { background-color: var(--color-text-muted); color: var(--color-text-muted); }
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+.section-header h2 {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.section-header i {
+    color: var(--color-info);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-lg);
+}
+
+.stat-card {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(59, 130, 246, 0.3); /* Blue tint */
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+.stat-header i {
+    width: 18px;
+    height: 18px;
+}
+
+.stat-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.stat-card.primary .stat-value { color: var(--color-info); }
+.stat-card.success .stat-value { color: var(--color-cta); }
+.stat-card.warning .stat-value { color: var(--color-warning); }
+.stat-card.danger .stat-value { color: var(--color-danger); }
+
+/* Camera & Chart Grid */
+.media-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.8fr;
+    gap: var(--space-lg);
+}
+
+.camera-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.camera-header {
+    padding: var(--space-md);
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+}
+
+.camera-header i {
+    color: var(--color-info);
+}
+
+.camera-feed {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: #000;
+    display: block;
+}
+
+.chart-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-header {
+    padding: var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-header i {
+    color: var(--color-warning);
+}
+
+.chart-body {
+    padding: var(--space-md);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .media-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .chart-card {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: var(--space-md);
+        position: relative;
+    }
+    .media-grid {
+        grid-template-columns: 1fr;
+    }
+}

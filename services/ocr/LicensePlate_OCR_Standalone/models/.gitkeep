@@ -1,0 +1,5 @@
+# This directory contains OCR and detection model weights
+# Place these files here:
+# - PP-OCRv5_server_det_infer.onnx (detection model)
+# - PP-OCRv5_server_rec_infer.onnx (recognition model)
+# - best_plate_yolov8.pt (plate detection model)

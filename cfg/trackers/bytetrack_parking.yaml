@@ -1,0 +1,12 @@
+# ByteTrack config — tuned for YOLOv8l (parking camera)
+# model.track() conf=0.35, vì vậy track_high_thresh phải <= 0.35
+# để detection confidence thấp của xe xa/ngoài slot không bị ByteTrack drop.
+
+tracker_type: bytetrack
+
+track_high_thresh: 0.25   # Giảm xuống 0.25 để bắt được xe bị mờ / móp méo do lag
+track_low_thresh: 0.01    # Giảm xuống 0.01 để bám dính các detection cực mờ do motion blur
+new_track_thresh: 0.25    # Tạo track mới dễ dàng hơn
+track_buffer: 300         # Tăng lên 300 frames (~10s) để giữ track ID không bị xóa khi camera lag/rớt frame
+match_thresh: 0.95        # Nới lỏng IoU threshold (0.85 -> 0.95) để bắt kịp xe bị nhảy xa do đứt đoạn frame
+fuse_score: True          # Kết hợp IoU + conf cho matching ổn hơn

@@ -1,0 +1,16 @@
+# Parking Slots
+#
+# Lưu ý: file cấu hình này có thể ghi đè layout slot trong
+# `define_parking_areas()`. Hiện polygon bạn đưa là entry trigger,
+# nên để rỗng để hệ thống dùng layout mặc định (fallback).
+PARKING_SLOTS = [
+]
+
+# Entry Zones
+ENTRY_ZONES = [
+]
+
+# Entry Trigger (red line zone) - baseline 1020x500
+ENTRY_LINE_ZONES = [
+    [(181,48),(178,112),(282,132),(285,33)],
+]
