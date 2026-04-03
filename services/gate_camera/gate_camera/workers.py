@@ -81,10 +81,20 @@ def _save_ocr_plate_image(gate_capture_dir: str, track_id: str, plate_text: str,
         plate_tag = (plate_text or "noplate").strip() or "noplate"
         plate_tag = "".join(ch for ch in plate_tag if ch.isalnum() or ch in ("-", "_"))[:24]
         ts = int(time.time() * 1000)
-        fname = f"gate_{track_id}_{plate_tag}_{ts}.jpg"
-        fpath = os.path.join(gate_capture_dir, fname)
-        cv2.imwrite(fpath, plate_img)
-        return f"/static/gate_captures/{fname}"
+        # reject geometrically implausible crops (vertical stripes / horizontally-compressed)
+        h, w = plate_img.shape[:2]
+        aspect_ratio = float(w) / float(h) if h > 0 else 0.0
+        min_aspect = 1.0
+        max_aspect = 10.0
+        min_width_px = 24
+        if w >= min_width_px and min_aspect <= aspect_ratio <= max_aspect:
+            fname = f"gate_{track_id}_{plate_tag}_{ts}.jpg"
+            fpath = os.path.join(gate_capture_dir, fname)
+            cv2.imwrite(fpath, plate_img)
+            return f"/static/gate_captures/{fname}"
+        print(f"[GATE OCR] Skipping implausible plate crop "
+              f"{w}x{h} ar={aspect_ratio:.2f} track={track_id}")
+        return None
     except Exception as img_exc:
         print(f"[GATE OCR] Failed to save OCR artifact image for {track_id}: {img_exc}")
         return None
@@ -175,7 +185,7 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
             ocr_ts = int(time.time() * 1000)
 
             # Phase 5: provisional single-frame high confidence
-            if v.plate_text and len(v.plate_text.strip()) >= 4 and float(v.plate_conf or 0) >= GATE_OCR_PROVISIONAL_CONF:
+            if v.plate_text and len(v.plate_text.strip()) >= 3 and float(v.plate_conf or 0) >= GATE_OCR_PROVISIONAL_CONF:
                 pt = v.plate_text.strip()
                 prev = best_plate_by_track.get(track_id)
                 if prev is None or float(v.plate_conf) > float(prev.get('conf', 0)):
@@ -237,7 +247,7 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                 track_plate_images[track_id] = _upscale_plate_for_cache(v.plate_image)
 
             # --- Per-track majority voting ---
-            if len(v.plate_text) < 4:
+            if len(v.plate_text) < 3:
                 continue
 
             if track_id not in plate_votes_by_track:
@@ -532,7 +542,7 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
             try:
                 gate_ocr_prune_stale_ctx_and_jobs()
                 for _tid, _hrec in list(gate_vehicle_handoffs.items()):
-                    gate_ocr_merge_ctx_from_handoff(_tid, _hrec)
+                    gate_ocr_merge_ctx_from_handoff(_tid, _hrec, gate_vehicle_handoffs)
 
                 # Bypass CLAHE for Gate Camera to maximize FPS and prevent tracking loss
                 detection_frame = frame.copy()
@@ -1100,10 +1110,12 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             record['handover_trigger_frame'] = frame_count
 
                         gate_ocr_persist_ctx_before_handoff_drop(vehicle_id, record)
-                        # Cleanup to prevent memory leak
+                        # Cleanup to prevent memory leak — pop BEFORE persist so the guard skips
+                        # (vehicle no longer in gate_vehicle_handoffs → no stale-ctx overwrite risk)
                         gate_vehicle_handoffs.pop(vehicle_id, None)
                         with shared_state.gate_ocr_scheduler_lock:
                             shared_state.gate_ocr_latest_jobs.pop(vehicle_id, None)
+                            shared_state.gate_ocr_track_db_ctx.pop(vehicle_id, None)
                             shared_state.gate_ocr_artifacts.pop(vehicle_id, None)
 
                     del _tracks_hist[vehicle_id]

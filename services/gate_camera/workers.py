@@ -79,7 +79,19 @@ def _save_ocr_plate_image(gate_capture_dir: str, track_id: str, plate_text: str,
         return None
     try:
         to_write = plate_img
-        if plate_img.shape[0] < 10:
+        h, w = to_write.shape[:2]
+        if h < 8 or w < 8:
+            return None
+        # reject geometrically implausible crops (vertical stripes / horizontally-compressed)
+        aspect_ratio = float(w) / float(h) if h > 0 else 0.0
+        min_aspect = 1.0   # plate is wider than tall
+        max_aspect = 10.0  # at most 10:1 (semi-truck plate ~8:1)
+        min_width_px = 24   # even a small plate should be >= 24px wide
+        if w < min_width_px or aspect_ratio < min_aspect or aspect_ratio > max_aspect:
+            print(f"[GATE OCR] Skipping implausible plate crop "
+                  f"{w}x{h} ar={aspect_ratio:.2f} track={track_id}")
+            return None
+        if to_write.shape[0] < 10:
             to_write = _upscale_plate_for_cache(plate_img)
         if to_write is None or to_write.size == 0 or to_write.shape[0] < 8:
             return None
@@ -121,6 +133,9 @@ def _resolve_gate_media_ctx(track_id, gate_vehicle_handoffs: dict):
         d = ctx.get("direction")
         if d:
             direction = str(d).lower()
+        if gid:
+            with shared_state.gate_ocr_scheduler_lock:
+                shared_state.gate_ocr_track_db_ctx.pop(track_id, None)
     return gid, sid, direction
 
 
@@ -216,7 +231,7 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
             ocr_ts = int(time.time() * 1000)
 
             # Phase 5: provisional single-frame high confidence
-            if v.plate_text and len(v.plate_text.strip()) >= 4 and float(v.plate_conf or 0) >= GATE_OCR_PROVISIONAL_CONF:
+            if v.plate_text and len(v.plate_text.strip()) >= 3 and float(v.plate_conf or 0) >= GATE_OCR_PROVISIONAL_CONF:
                 pt = v.plate_text.strip()
                 prev = best_plate_by_track.get(track_id)
                 if prev is None or float(v.plate_conf) > float(prev.get('conf', 0)):
@@ -304,7 +319,7 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                 track_plate_images[track_id] = _upscale_plate_for_cache(v.plate_image)
 
             # --- Per-track majority voting ---
-            if len(v.plate_text) < 4:
+            if len(v.plate_text) < 3:
                 continue
 
             if track_id not in plate_votes_by_track:
@@ -1215,11 +1230,13 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             record['ready_to_handover'] = True
                             record['handover_trigger_frame'] = frame_count
 
-                        gate_ocr_persist_ctx_before_handoff_drop(vehicle_id, record)
-                        # Cleanup to prevent memory leak
+                        # Cleanup to prevent memory leak — pop BEFORE persist so the guard skips
+                        # (vehicle no longer in gate_vehicle_handoffs → no stale-ctx overwrite risk)
                         gate_vehicle_handoffs.pop(vehicle_id, None)
+                        gate_ocr_persist_ctx_before_handoff_drop(vehicle_id, record)
                         with shared_state.gate_ocr_scheduler_lock:
                             shared_state.gate_ocr_latest_jobs.pop(vehicle_id, None)
+                            shared_state.gate_ocr_track_db_ctx.pop(vehicle_id, None)
                             shared_state.gate_ocr_artifacts.pop(vehicle_id, None)
 
                     del _tracks_hist[vehicle_id]

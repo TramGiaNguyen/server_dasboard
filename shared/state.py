@@ -215,7 +215,7 @@ matched_vehicles_lock = threading.Lock()
 #    maxsize=2: only latest frame matters for MJPEG; older frames are discarded.
 
 GATE_OCR_BACKFILL_TTL_SEC = 300.0
-GATE_OCR_PROVISIONAL_CONF = 0.85
+GATE_OCR_PROVISIONAL_CONF = 0.60  # was 0.85 — lowered to capture more single-frame results
 
 gate_ocr_scheduler_lock = threading.Lock()
 gate_ocr_latest_jobs = {}
@@ -242,9 +242,12 @@ def gate_ocr_enqueue_job(track_id, crop_job: dict):
         gate_ocr_condition.notify()
 
 
-def gate_ocr_merge_ctx_from_handoff(track_id, handoff_record: dict):
+def gate_ocr_merge_ctx_from_handoff(track_id, handoff_record: dict, gate_vehicle_handoffs: dict = None):
     """Persist gate_log_id from handoff for OCR backfill after track removed."""
     if not track_id or not handoff_record:
+        return
+    # do NOT overwrite with stale ctx if an active handoff already owns this track_id
+    if gate_vehicle_handoffs is not None and track_id in gate_vehicle_handoffs:
         return
     rs = handoff_record.get('result_store') or {}
     # IN: log_gate_entry writes gate_log_id onto the handoff dict passed as result_store.
@@ -262,9 +265,9 @@ def gate_ocr_merge_ctx_from_handoff(track_id, handoff_record: dict):
         }
 
 
-def gate_ocr_persist_ctx_before_handoff_drop(vehicle_id, handoff_record: dict):
+def gate_ocr_persist_ctx_before_handoff_drop(vehicle_id, handoff_record: dict, gate_vehicle_handoffs: dict = None):
     """Call before removing handoff so OCR can still update GateLog."""
-    gate_ocr_merge_ctx_from_handoff(vehicle_id, handoff_record)
+    gate_ocr_merge_ctx_from_handoff(vehicle_id, handoff_record, gate_vehicle_handoffs)
 
 
 def gate_ocr_prune_stale_ctx_and_jobs(now=None):

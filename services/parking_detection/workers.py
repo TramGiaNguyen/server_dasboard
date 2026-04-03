@@ -1046,6 +1046,10 @@ def detect_track_worker(
                                     )
                                 _ip_key = f"outside_{ingress_seq}"
                                 if _ip_key not in r.improper_park_timers:
+                                    # cancel any generic track_{tid} timer — FIFO owns this vehicle now
+                                    _tracked_id = match_info.get('track_id')
+                                    if _tracked_id is not None:
+                                        r.improper_park_timers.pop(f"track_{_tracked_id}", None)
                                     _fifo_bbox = match_info.get('bbox', [0, 0, 0, 0])
                                     _init_cx = (_fifo_bbox[0] + _fifo_bbox[2]) / 2.0
                                     _init_cy = (_fifo_bbox[1] + _fifo_bbox[3]) / 2.0
@@ -1214,6 +1218,11 @@ def detect_track_worker(
                 info.get('track_id') for info in matched_vehicles_with_plates.values()
                 if info.get('parked_outside') and info.get('track_id') is not None
             }
+            # sweep: cancel generic track_* timers for vehicles now owned by FIFO outside path
+            for _tid in _fifo_outside_tids:
+                _track_key = f"track_{_tid}"
+                if _track_key in r.improper_park_timers and not r.improper_park_timers[_track_key].get('logged'):
+                    r.improper_park_timers.pop(_track_key, None)
             _track_id_to_plate = {
                 info.get('track_id'): info.get('plate')
                 for info in matched_vehicles_with_plates.values()
