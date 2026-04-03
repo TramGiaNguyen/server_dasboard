@@ -1,14 +1,14 @@
 """
 Gate Camera Pipeline — Multi-threaded architecture
 ===================================================
-Luồng xử lý được tách thành 3 worker độc lập để tránh OCR blocking video:
+Luồng xử lý được tách thành 4 worker độc lập để tránh OCR blocking video:
 
     RTSPCapture (background thread, có sẵn)
          ↓ latest_frame (Lock-protected)
     [Thread 1] Detect+Track Worker
          ├─ YOLO + ByteTrack (mỗi frame)
          ├─ Line-crossing logic (LINE_1, LINE_2)
-         ├─ Push plate crop → gate_ocr_crop_queue          (non-blocking)
+         ├─ gate_db_pending_push → GateDBWriter pending queue
          └─ Push annotated frame → gate_render_queue        (non-blocking)
                   ↓                             ↓
     [Thread 2] OCR Worker          [Thread 3] Render Worker
@@ -16,6 +16,11 @@ Luồng xử lý được tách thành 3 worker độc lập để tránh OCR bl
     stable_plate_cache              gate_latest_jpeg  (shared_state)
          ↑                                     ↓
     best_plate_by_track            MJPEG / API / SocketIO
+
+    [Thread 4] GateDBWriter Worker
+         ├─ gate_db_pending_update ← OCR results
+         ├─ Waits: OCR done (conf≥0.5) OR timeout 8s
+         └─ DB write: log_gate_entry/exit once + update_plate/image
 
 Không có thay đổi logic trong quy trình FIFO plate matching.
 """
@@ -58,7 +63,7 @@ from shared.state import plate_fifo_queue
 from shared.state import plate_fifo_lock
 import shared.state as shared_state
 from services.gate_camera.pipeline import GatePipelineRuntime
-from services.gate_camera.workers import ocr_worker, render_worker, detect_track_worker
+from services.gate_camera.workers import ocr_worker, render_worker, detect_track_worker, gate_db_writer_worker
 
 from config import COCO_FILE_PATH, GATE_LINE_1_Y, GATE_LINE_2_Y, GATE_LINE_3_Y, GATE_LINE_THICKNESS
 from database.operations import update_gate_entry_plate, update_gate_entry_media
@@ -119,7 +124,7 @@ def process_gate_video_stream(video_url, socketio=None, gate_ocr_results_dict=No
     """
     Process video stream for gate camera with license plate OCR.
 
-    Spawns 3 background daemon threads (Detect+Track, OCR, Render) and
+    Spawns 4 background daemon threads (Detect+Track, OCR, Render, GateDBWriter) and
     returns a generator that yields MJPEG frames from shared_state.gate_latest_jpeg.
 
     Args:
@@ -304,7 +309,15 @@ def process_gate_video_stream(video_url, socketio=None, gate_ocr_results_dict=No
     render_thread.start()
     detect_thread.start()
 
-    print("[GATE] Pipeline started: Detect+Track, OCR, Render workers running in background.")
+    db_writer_thread = threading.Thread(
+        target=gate_db_writer_worker,
+        args=(gate_vehicle_handoffs, _stop, runtime.submit_io, GATE_CAPTURE_DIR, base_dir),
+        daemon=True,
+        name="GateDBWriter",
+    )
+    db_writer_thread.start()
+
+    print("[GATE] Pipeline started: Detect+Track, OCR, Render, GateDBWriter workers running in background.")
 
     # ---- Generator: relay gate_latest_jpeg at ~30fps ----
     # This generator is what the background thread in main.py consumes with `for _ in ...`.

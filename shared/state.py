@@ -6,6 +6,8 @@ import os
 import threading
 import time
 
+import numpy as np
+
 # ========== CAMERA STARTUP SYNCHRONIZATION ==========
 # Ensures both cameras connect and start processing at the same time
 # Each camera signals "ready" after connecting, then waits for both to be ready
@@ -291,6 +293,66 @@ def gate_ocr_scheduler_depth():
 
 from queue import Queue as _Queue
 gate_render_queue:   _Queue = _Queue(maxsize=2)
+
+# ========== GATE DB WRITER (Aggregated DB Writer) ==========
+# GateDBWriter worker waits for OCR to complete OR timeout, then writes once to DB
+# for each vehicle. Separates DB write flow from detect_track and ocr_worker.
+
+GATE_DB_WRITER_TIMEOUT_SEC = 8.0   # max wait for OCR
+GATE_DB_WRITER_MIN_CONF    = 0.50  # min conf to consider OCR done
+
+gate_db_pending_lock   = threading.Lock()
+gate_db_pending_records: dict = {}        # {track_id: PendingRecord}
+_gate_db_writer_ready_cond = threading.Condition()  # signal: OCR result ready
+
+
+def gate_db_pending_push(track_id: str, record: dict):
+    """Push a pending record when a vehicle crosses the line. Called from detect_track."""
+    with gate_db_pending_lock:
+        gate_db_pending_records[track_id] = record.copy()
+
+
+def gate_db_pending_update(track_id: str, **kwargs):
+    """Update pending record when OCR has a result. Called from ocr_worker."""
+    should_notify = False
+    with gate_db_pending_lock:
+        rec = gate_db_pending_records.get(track_id)
+        if rec is None:
+            return
+        rec.update(kwargs)
+        if 'status' in kwargs:
+            pass  # status explicitly provided — keep it
+        elif 'conf' in kwargs and kwargs['conf'] >= GATE_DB_WRITER_MIN_CONF:
+            rec['status'] = 'ocr_done'
+        else:
+            rec['status'] = 'pending'
+        should_notify = True
+    # Notify OUTSIDE gate_db_pending_lock to avoid circular wait deadlock:
+    # worker holds _gate_db_writer_ready_cond while acquiring gate_db_pending_lock
+    if should_notify:
+        with _gate_db_writer_ready_cond:
+            _gate_db_writer_ready_cond.notify()
+
+
+def gate_db_pending_get(track_id: str) -> dict | None:
+    with gate_db_pending_lock:
+        return gate_db_pending_records.get(track_id)
+
+
+def gate_db_pending_remove(track_id: str):
+    with gate_db_pending_lock:
+        gate_db_pending_records.pop(track_id, None)
+
+
+def gate_db_pending_timed_out(now=None) -> list:
+    """Return list of track_ids that have timed out."""
+    now = now or time.time()
+    with gate_db_pending_lock:
+        return [
+            tid for tid, rec in gate_db_pending_records.items()
+            if not rec.get('db_written', False)
+            and now >= rec.get('write_deadline_ts', 0)
+        ]
 
 # ========== VIDEO SYNCHRONIZATION ==========
 # Sync gate camera and parking camera video streams

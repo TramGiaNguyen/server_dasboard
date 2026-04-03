@@ -45,13 +45,23 @@ from shared.state import (
     gate_ocr_prune_stale_ctx_and_jobs,
     gate_ocr_scheduler_depth,
     GATE_OCR_PROVISIONAL_CONF,
+    gate_db_pending_lock,
+    gate_db_pending_records,
+    gate_db_pending_push,
+    gate_db_pending_update,
+    gate_db_pending_get,
+    gate_db_pending_remove,
+    gate_db_pending_timed_out,
+    GATE_DB_WRITER_TIMEOUT_SEC,
+    GATE_DB_WRITER_MIN_CONF,
+    _gate_db_writer_ready_cond,
 )
 import shared.state as shared_state
 
 from config import TRACKING_ENABLED
 from shared.models import initialize_model
 from services.vehicle_tracking.tracker import get_tracker
-from database.operations import log_gate_entry, log_gate_exit, update_gate_exit_plate, update_gate_entry_media
+from database.operations import log_gate_entry, log_gate_exit, update_gate_entry_plate, update_gate_exit_plate, update_gate_entry_media
 from services.vehicle_tracking.models import VehicleTicket
 from shared.rtsp_reconnect import RobustRTSPCapture
 
@@ -281,8 +291,21 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                             stable_plate_cache[track_id] = {'cx': 0, 'cy': 0}
                         stable_plate_cache[track_id]['plate'] = pt
                         stable_plate_cache[track_id]['conf'] = float(v.plate_conf)
+                        # GateDBWriter handles DB write — update pending record
                         if ocr_image_path:
-                            _upsert_fn(track_id, pt, float(v.plate_conf), image_path=ocr_image_path, ocr_ts=ocr_ts)
+                            gate_db_pending_update(track_id,
+                                plate=pt,
+                                conf=float(v.plate_conf),
+                                image_path=ocr_image_path,
+                                ocr_ts=ocr_ts,
+                                status='ocr_done' if float(v.plate_conf) >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                            )
+                        else:
+                            gate_db_pending_update(track_id,
+                                plate=pt,
+                                conf=float(v.plate_conf),
+                                status='ocr_done' if float(v.plate_conf) >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                            )
                         update_plate_fifo_entry(track_id, pt, float(v.plate_conf))
 
             if not v.plate_text:
@@ -396,8 +419,21 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                             stable_plate_cache[track_id] = {'cx': 0, 'cy': 0}
                         stable_plate_cache[track_id]['plate'] = best_text
                         stable_plate_cache[track_id]['conf'] = best_conf
+                        # GateDBWriter handles DB write — update pending record
                         if ocr_image_path:
-                            _upsert_fn(track_id, best_text, best_conf, image_path=ocr_image_path, ocr_ts=ocr_ts)
+                            gate_db_pending_update(track_id,
+                                plate=best_text,
+                                conf=best_conf,
+                                image_path=ocr_image_path,
+                                ocr_ts=ocr_ts,
+                                status='ocr_done' if best_conf >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                            )
+                        else:
+                            gate_db_pending_update(track_id,
+                                plate=best_text,
+                                conf=best_conf,
+                                status='ocr_done' if best_conf >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                            )
                         update_plate_fifo_entry(track_id, best_text, best_conf)
 
         except Exception as exc:
@@ -797,13 +833,14 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             record['conf']  = bp['conf']
                             record['status'] = 'ocr_done' if bp['conf'] >= 0.50 else 'waiting_ocr'
                             if record.get('direction', 'in') == 'in':
+                                # GateDBWriter handles DB write — update pending record
                                 artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
-                                _upsert_fn(
-                                    vehicle_id,
-                                    bp['plate'],
-                                    bp['conf'],
+                                gate_db_pending_update(vehicle_id,
+                                    plate=bp['plate'],
+                                    conf=bp['conf'],
                                     image_path=artifact.get('image_path'),
                                     ocr_ts=artifact.get('ocr_ts'),
+                                    status='ocr_done' if bp['conf'] >= GATE_DB_WRITER_MIN_CONF else 'pending',
                                 )
                             else:
                                 if record['status'] == 'ocr_done' and not record.get('exit_updated'):
@@ -812,29 +849,18 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                                     if gate_log_id:
                                         artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
                                         artifact_img = artifact.get('image_path')
-                                        artifact_ts = artifact.get('ocr_ts')
                                         if not artifact_img:
                                             # Keep pending until OCR artifact image exists for text-image coupling.
                                             continue
                                         record['exit_updated'] = True
-                                        if io_submit is not None:
-                                            print(f"[GATE OCR] OUT submit log_id={gate_log_id} track={vehicle_id} plate={bp['plate']} image={artifact_img}")
-                                            io_submit(
-                                                update_gate_exit_plate,
-                                                gate_log_id,
-                                                bp['plate'],
-                                                bp['conf'],
-                                                image_path=artifact_img,
-                                                coalesce_group="gate_exit_update",
-                                                coalesce_key=f"{gate_log_id}:{artifact_ts}" if artifact_ts else str(gate_log_id),
-                                            )
-                                        else:
-                                            threading.Thread(
-                                                target=update_gate_exit_plate,
-                                                args=(gate_log_id, bp['plate'], bp['conf']),
-                                                kwargs={'image_path': artifact_img},
-                                                daemon=True
-                                            ).start()
+                                        # GateDBWriter handles DB write — update pending record
+                                        gate_db_pending_update(vehicle_id,
+                                            plate=bp['plate'],
+                                            conf=bp['conf'],
+                                            image_path=artifact_img,
+                                            ocr_ts=artifact.get('ocr_ts'),
+                                            status='ocr_done' if bp['conf'] >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                                        )
 
                     crossing_state = _line_crossings[vehicle_id]
                     last_y  = crossing_state['last_y']
@@ -998,6 +1024,30 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                                 except Exception as _e:
                                     print(f"[GATE] Failed to save vehicle evidence (IN): {_e}")
                             
+                            # 4. GateDBWriter handles DB write:
+                            #    - gate_db_pending_push: creates pending record for OCR backfill
+                            #    - Synchronous io_submit(log_gate_entry): sets gate_log_id immediately
+                            #    - GateDBWriter waits for OCR result OR timeout, then updates plate/image
+                            gate_db_pending_push(vehicle_id, {
+                                'track_id': vehicle_id,
+                                'direction': 'in',
+                                'vehicle_type': vehicle_type,
+                                'frame_count': frame_count,
+                                'created_ts': time.time(),
+                                'gate_log_id': None,
+                                'session_id': None,
+                                'plate': best_plate_text,
+                                'conf': best_plate_conf,
+                                'image_path': _img_path,
+                                'ocr_ts': None,
+                                'exit_updated': False,
+                                'db_written': False,
+                                'write_deadline_ts': time.time() + GATE_DB_WRITER_TIMEOUT_SEC,
+                                'best_plate_image': _cached_img,
+                                'status': 'pending',
+                                'result_store': _entry_result_store,
+                            })
+                            # Synchronous call to set gate_log_id immediately
                             if io_submit is not None:
                                 io_submit(
                                     log_gate_entry,
@@ -1079,6 +1129,30 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             if _exit_plate:
                                 crossing_events.append({'plate': _exit_plate, 'conf': _exit_conf, 'direction': 'out'})
 
+                            # GateDBWriter handles DB write for OUT:
+                            # - gate_db_pending_push: creates pending record for OCR backfill
+                            # - Synchronous io_submit(log_gate_exit): sets gate_log_id immediately
+                            # - GateDBWriter waits for OCR result OR timeout, then updates plate/image
+                            gate_db_pending_push(vehicle_id, {
+                                'track_id': vehicle_id,
+                                'direction': 'out',
+                                'vehicle_type': vehicle.vehicle_type if vehicle.vehicle_type else 'car',
+                                'frame_count': frame_count,
+                                'created_ts': time.time(),
+                                'gate_log_id': None,
+                                'session_id': None,
+                                'plate': _exit_plate,
+                                'conf': _exit_conf,
+                                'image_path': _exit_img_path,
+                                'ocr_ts': None,
+                                'exit_updated': False,
+                                'db_written': False,
+                                'write_deadline_ts': time.time() + GATE_DB_WRITER_TIMEOUT_SEC,
+                                'best_plate_image': _cached_exit,
+                                'status': 'pending',
+                                'result_store': _exit_result_store,
+                            })
+
                             # Emergency OCR retry for EXIT:
                                 # if plate not ready at crossing moment, push a fresh crop immediately
                             # so OCR worker can still update Gate OUT log afterwards.
@@ -1096,6 +1170,7 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                                 except Exception as _ocrq_e:
                                     print(f"[GATE OCR] EXIT retry queue failed for {vehicle_id}: {_ocrq_e}")
                                 
+                            # Synchronous call to set gate_log_id immediately
                             if io_submit is not None:
                                 io_submit(
                                     log_gate_exit,
@@ -1198,63 +1273,39 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                         if direction == 'in':
                             if _final_plate:
                                 record['status'] = 'ocr_done'
+                                # GateDBWriter handles DB write — update pending record
                                 artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
-                                if not _upsert_fn(
-                                    vehicle_id,
-                                    _final_plate,
-                                    record.get('conf', 0),
+                                gate_db_pending_update(vehicle_id,
+                                    plate=_final_plate,
+                                    conf=record.get('conf', 0),
                                     image_path=artifact.get('image_path'),
                                     ocr_ts=artifact.get('ocr_ts'),
-                                ):
-                                    if not update_plate_fifo_entry(vehicle_id, _final_plate, record.get('conf', 0.0)):
-                                        with plate_fifo_lock:
-                                            plate_fifo_queue.append({
-                                                'ingress_seq': allocate_ingress_seq(),
-                                                'plate': _final_plate,
-                                                'conf': record.get('conf', 0.0),
-                                                'timestamp': datetime.now(),
-                                                'assigned': False,
-                                                'reserved_ingress_seq': None,
-                                                'gate_track_id': vehicle_id,
-                                            })
-                                        print(f"[GATE→QUEUE] Added plate {_final_plate} on disappear (track={vehicle_id})")
+                                    status='ocr_done' if float(record.get('conf', 0)) >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                                )
+                                update_plate_fifo_entry(vehicle_id, _final_plate, record.get('conf', 0.0))
                         elif direction == 'out' and not record.get('exit_updated'):
                             if _final_plate:
                                 record['status'] = 'ocr_done'
-                            r_store = record.get('result_store', {})
-                            gate_log_id = r_store.get('gate_log_id')
-                            if gate_log_id:
-                                _img_path = None
-                                _cached_exit = track_plate_images.get(vehicle_id)
-                                if _cached_exit is not None:
-                                    try:
-                                        _fname_plate = _final_plate or "noplate"
-                                        _fname_ex = f"gate_{_fname_plate}_{frame_count}_out.jpg"
-                                        cv2.imwrite(os.path.join(gate_capture_dir, _fname_ex), _cached_exit)
-                                        _img_path = f"/static/gate_captures/{_fname_ex}"
-                                    except Exception:
-                                        pass
-                                artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
-                                artifact_img = artifact.get('image_path') or _img_path
-                                artifact_ts = artifact.get('ocr_ts')
-                                if io_submit is not None:
-                                    print(f"[GATE OCR] OUT cleanup submit log_id={gate_log_id} track={vehicle_id} plate={_final_plate} image={artifact_img}")
-                                    io_submit(
-                                        update_gate_exit_plate,
-                                        gate_log_id,
-                                        _final_plate,
-                                        record.get('conf', 0.0),
-                                        image_path=artifact_img,
-                                        coalesce_group="gate_exit_update",
-                                        coalesce_key=f"{gate_log_id}:{artifact_ts}" if artifact_ts else str(gate_log_id),
-                                    )
-                                else:
-                                    threading.Thread(
-                                        target=update_gate_exit_plate,
-                                        args=(gate_log_id, _final_plate, record.get('conf', 0.0)),
-                                        kwargs={'image_path': artifact_img},
-                                        daemon=True
-                                    ).start()
+                            # GateDBWriter handles DB write — update pending record
+                            artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
+                            _exit_img = track_plate_images.get(vehicle_id)
+                            if _exit_img is not None:
+                                try:
+                                    _fname_ex = f"gate_{_final_plate or 'noplate'}_{frame_count}_out.jpg"
+                                    cv2.imwrite(os.path.join(gate_capture_dir, _fname_ex), _exit_img)
+                                    _exit_img_url = f"/static/gate_captures/{_fname_ex}"
+                                except Exception:
+                                    _exit_img_url = None
+                            else:
+                                _exit_img_url = None
+                            artifact_img = artifact.get('image_path') or _exit_img_url
+                            gate_db_pending_update(vehicle_id,
+                                plate=_final_plate,
+                                conf=record.get('conf', 0.0),
+                                image_path=artifact_img,
+                                ocr_ts=artifact.get('ocr_ts'),
+                                status='ocr_done' if float(record.get('conf', 0.0)) >= GATE_DB_WRITER_MIN_CONF else 'pending',
+                            )
                             record['exit_updated'] = True
 
                         if not record.get('ready_to_handover'):
@@ -1269,6 +1320,8 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             shared_state.gate_ocr_latest_jobs.pop(vehicle_id, None)
                             shared_state.gate_ocr_track_db_ctx.pop(vehicle_id, None)
                             shared_state.gate_ocr_artifacts.pop(vehicle_id, None)
+                        # Remove pending record from GateDBWriter queue
+                        gate_db_pending_remove(vehicle_id)
 
                     del _tracks_hist[vehicle_id]
                     _line_crossings.pop(vehicle_id, None)
@@ -1479,3 +1532,222 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
     if cap:
         cap.release()
     print("[GATE] Detect+Track Worker stopped")
+
+
+# ---------------------------------------------------------------------------
+# GateDBWriter Worker Thread  (Aggregated DB Writer)
+# ---------------------------------------------------------------------------
+
+def _gate_pending_resolve_log_ctx(rec: dict):
+    """
+    detect_track sets gate_log_id on result_store (handoff dict) after log_gate_entry.
+    Pending record may still have gate_log_id=None at top level — read from result_store.
+    """
+    rs = rec.get('result_store')
+    if not isinstance(rs, dict):
+        rs = None
+    gid = rec.get('gate_log_id') or (rs.get('gate_log_id') if rs else None)
+    sid = rec.get('session_id') or (rs.get('session_id') if rs else None)
+    return gid, sid, rs
+
+
+def gate_db_writer_worker(
+    gate_vehicle_handoffs,
+    stop_event,
+    io_submit=None,
+    gate_capture_dir=None,
+    base_dir=None,
+):
+    """
+    Aggregator Worker — waits for OCR to complete OR timeout,
+    then writes once to DB for each vehicle.
+
+    Flow:
+    1. detect_track calls gate_db_pending_push → creates record (gate_log_id may be set by sync call)
+    2. ocr_worker calls gate_db_pending_update → updates plate + plate_image
+    3. gate_db_writer processes:
+       - gate_log_id already set (detect_track sync call completed) → only update plate/image
+       - gate_log_id=None (timeout before detect_track sync call) → write log AND update plate
+    4. GateDBWriter only writes if gate_log_id is None — detect_track handles the sync path.
+    """
+    print("[GATE DB Writer] Worker started")
+
+    while not stop_event.is_set():
+        now = time.time()
+
+        # ── Step 1: Collect timed-out IDs (outside lock) ───────
+        # gate_db_pending_timed_out acquires lock internally, then we
+        # re-acquire it per-record to avoid nested-lock deadlock.
+        timed_out_ids = []
+        with gate_db_pending_lock:
+            timed_out_ids = [
+                tid for tid, rec in gate_db_pending_records.items()
+                if not rec.get('db_written', False)
+                and now >= rec.get('write_deadline_ts', 0)
+            ]
+
+        for track_id in timed_out_ids:
+            with gate_db_pending_lock:
+                rec = gate_db_pending_records.get(track_id)
+                if rec is None or rec.get('db_written'):
+                    continue
+                direction = rec.get('direction', 'in')
+                plate_text = rec.get('plate')
+                conf = float(rec.get('conf', 0.0))
+                img_path = rec.get('image_path')
+                gate_log_id, session_id, result_store = _gate_pending_resolve_log_ctx(rec)
+                rec['db_written'] = True
+
+            if not gate_log_id:
+                if direction == 'in':
+                    if io_submit is not None:
+                        io_submit(
+                            log_gate_entry, plate_text, conf,
+                            image_path=img_path,
+                            result_store=result_store if result_store else None,
+                            coalesce_group="gate_entry_log",
+                            coalesce_key=f"timeout:{track_id}",
+                        )
+                    else:
+                        threading.Thread(
+                            target=log_gate_entry,
+                            args=(plate_text, conf),
+                            kwargs={'image_path': img_path, 'result_store': result_store if result_store else None},
+                            daemon=True,
+                        ).start()
+                    print(f"[GATE DB Writer] TIMEOUT IN → log_gate_entry track={track_id} plate={plate_text}")
+                else:
+                    if io_submit is not None:
+                        io_submit(
+                            log_gate_exit, plate_text, conf,
+                            image_path=img_path,
+                            result_store=result_store if result_store else None,
+                            coalesce_group="gate_exit_log",
+                            coalesce_key=f"timeout:{track_id}",
+                        )
+                    else:
+                        threading.Thread(
+                            target=log_gate_exit,
+                            args=(plate_text, conf),
+                            kwargs={'image_path': img_path, 'result_store': result_store if result_store else None},
+                            daemon=True,
+                        ).start()
+                    print(f"[GATE DB Writer] TIMEOUT OUT → log_gate_exit track={track_id} plate={plate_text}")
+            else:
+                if direction == 'in':
+                    if io_submit is not None:
+                        io_submit(
+                            update_gate_entry_plate,
+                            gate_log_id, session_id, plate_text, conf,
+                            image_path=img_path,
+                            coalesce_group="gate_entry_update",
+                            coalesce_key=f"timeout:{track_id}",
+                        )
+                else:
+                    if io_submit is not None:
+                        io_submit(
+                            update_gate_exit_plate,
+                            gate_log_id, plate_text, conf,
+                            image_path=img_path,
+                            coalesce_group="gate_exit_update",
+                            coalesce_key=f"timeout:{track_id}",
+                        )
+                print(f"[GATE DB Writer] TIMEOUT UPDATE track={track_id} plate={plate_text} conf={conf}")
+
+        # ── Step 2: Collect ready records ───────────────────────
+        ready = []
+        with gate_db_pending_lock:
+            for tid, rec in list(gate_db_pending_records.items()):
+                if rec.get('db_written'):
+                    continue
+                if rec.get('status') == 'ocr_done':
+                    ready.append(tid)
+                elif rec.get('write_deadline_ts', float('inf')) <= now:
+                    ready.append(tid)
+                else:
+                    _gid, _, _ = _gate_pending_resolve_log_ctx(rec)
+                    if _gid and rec.get('plate'):
+                        ready.append(tid)
+
+        if not ready:
+            # Wait outside ALL locks — use dedicated condition signal
+            with _gate_db_writer_ready_cond:
+                _gate_db_writer_ready_cond.wait(timeout=1.0)
+            continue
+
+        # ── Step 3: Process ready records ────────────────────────
+        for track_id in ready:
+            with gate_db_pending_lock:
+                rec = gate_db_pending_records.get(track_id)
+                if rec is None or rec.get('db_written'):
+                    continue
+                direction = rec.get('direction', 'in')
+                plate_text = rec.get('plate')
+                conf = float(rec.get('conf', 0.0))
+                img_path = rec.get('image_path')
+                gate_log_id, session_id, result_store = _gate_pending_resolve_log_ctx(rec)
+                rec['db_written'] = True
+
+            if not gate_log_id:
+                if direction == 'in':
+                    if io_submit is not None:
+                        io_submit(
+                            log_gate_entry, plate_text, conf,
+                            image_path=img_path,
+                            result_store=result_store if result_store else None,
+                            coalesce_group="gate_entry_log",
+                            coalesce_key=f"ocr_done:{track_id}",
+                        )
+                    else:
+                        threading.Thread(
+                            target=log_gate_entry,
+                            args=(plate_text, conf),
+                            kwargs={'image_path': img_path, 'result_store': result_store if result_store else None},
+                            daemon=True,
+                        ).start()
+                    print(f"[GATE DB Writer] LOG (OCR done, no prior write) → track={track_id} plate={plate_text}")
+                else:
+                    if io_submit is not None:
+                        io_submit(
+                            log_gate_exit, plate_text, conf,
+                            image_path=img_path,
+                            result_store=result_store if result_store else None,
+                            coalesce_group="gate_exit_log",
+                            coalesce_key=f"ocr_done:{track_id}",
+                        )
+                    else:
+                        threading.Thread(
+                            target=log_gate_exit,
+                            args=(plate_text, conf),
+                            kwargs={'image_path': img_path, 'result_store': result_store if result_store else None},
+                            daemon=True,
+                        ).start()
+                    print(f"[GATE DB Writer] LOG (OCR done, no prior write) → track={track_id} plate={plate_text}")
+            else:
+                if direction == 'in':
+                    if io_submit is not None:
+                        io_submit(
+                            update_gate_entry_plate,
+                            gate_log_id, session_id, plate_text, conf,
+                            image_path=img_path,
+                            coalesce_group="gate_entry_update",
+                            coalesce_key=str(gate_log_id),
+                        )
+                else:
+                    if io_submit is not None:
+                        io_submit(
+                            update_gate_exit_plate,
+                            gate_log_id, plate_text, conf,
+                            image_path=img_path,
+                            coalesce_group="gate_exit_update",
+                            coalesce_key=str(gate_log_id),
+                        )
+                print(f"[GATE DB Writer] UPDATE (OCR done) → track={track_id} plate={plate_text} conf={conf}")
+
+        # ── Step 4: Cleanup written records ───────────────────────
+        with gate_db_pending_lock:
+            done = [tid for tid, rec in gate_db_pending_records.items() if rec.get('db_written')]
+            for tid in done:
+                gate_db_pending_records.pop(tid, None)
+
+    print("[GATE DB Writer] Worker stopped")
