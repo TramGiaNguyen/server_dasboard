@@ -1,15 +1,11 @@
 # =============================================================================
-# Smart Parking System - Docker Compose
+# Smart Parking System — Docker Compose (CPU-only)
 # =============================================================================
-# Services:
-#   1. postgres  - PostgreSQL database
-#   2. parking   - Main Smart Parking application (Dashboard + Camera Detection)
-#   3. backend   - Mobile App API backend
+# Stack GPU (mặc định trong build.bat / build.sh): docker-compose.gpu.yml
 #
 # Usage:
-#   Development: docker-compose up
-#   Production:  docker-compose up -d
-#   Rebuild:     docker-compose up --build
+#   docker compose up -d
+#   docker compose up --build
 # =============================================================================
 
 services:

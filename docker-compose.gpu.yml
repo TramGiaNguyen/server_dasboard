@@ -1,18 +1,81 @@
 # =============================================================================
-# GPU Override for Smart Parking System
+# Smart Parking System — Docker Compose (GPU stack, file duy nhất)
 # =============================================================================
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# Services: postgres, parking (CUDA runtime-gpu), backend
+#
+# Usage:
+#   docker compose -f docker-compose.gpu.yml up -d
+#   docker compose -f docker-compose.gpu.yml build
+#   docker compose -f docker-compose.gpu.yml down -v
+#
+# CPU-only: dùng docker-compose.yml
 # =============================================================================
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: parking_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-PARKING_PLATE}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1412}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-PARKING_PLATE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parking_network
+
   parking:
     build:
+      context: .
+      dockerfile: Dockerfile
       target: runtime-gpu
+    container_name: parking_main
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      # Enable GPU optimizations
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1412}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 5001
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-smart-parking-dev-secret-change-in-production}
+      PARKING_RTSP_URL: ${PARKING_RTSP_URL}
+      GATE_RTSP_URL: ${GATE_RTSP_URL}
+      MIN_CONFIDENCE: ${MIN_CONFIDENCE:-0.35}
+      MIN_AREA_SIZE: ${MIN_AREA_SIZE:-1500}
+      MIN_DIMENSION: ${MIN_DIMENSION:-30}
       PARKING_USE_HALF_PRECISION: "True"
+      PARKING_USE_CLAHE: ${PARKING_USE_CLAHE:-False}
+      PARKING_USE_DETECTION_THREAD: ${PARKING_USE_DETECTION_THREAD:-True}
+      PARKING_USE_ROBUST_RTSP: ${PARKING_USE_ROBUST_RTSP:-True}
+      PYTHONUNBUFFERED: 1
+      KMP_DUPLICATE_LIB_OK: TRUE
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    volumes:
+      - ./static/gate_captures:/app/static/gate_captures
+      - ./static/parking_captures:/app/static/parking_captures
+      - ./static/models:/app/static/models
+      - ./services/ocr/LicensePlate_OCR_Standalone/models:/app/services/ocr/LicensePlate_OCR_Standalone/models
+    ports:
+      - "5001:5001"
+    networks:
+      - parking_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
     deploy:
       resources:
         reservations:
@@ -20,3 +83,37 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend_app/Dockerfile
+    container_name: parking_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1412}@postgres:5432/${POSTGRES_DB:-PARKING_PLATE}
+      APP_PORT: 5002
+      SECRET_KEY: ${BACKEND_SECRET_KEY:-smart-parking-backend-secret-change-in-production}
+      FLASK_ENV: ${FLASK_ENV:-production}
+      PYTHONUNBUFFERED: 1
+    ports:
+      - "5002:5002"
+    networks:
+      - parking_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+networks:
+  parking_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

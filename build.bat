@@ -1,24 +1,19 @@
 @echo off
 REM Build script for Smart Parking System Docker images (Windows)
+REM Dùng docker-compose.gpu.yml (stack GPU) — xem docker-compose.yml nếu cần CPU-only
 
 setlocal enabledelayedexpansion
 
 echo ==========================================
-echo Smart Parking System - Docker Build
+echo Smart Parking System - Docker Build (GPU)
 echo ==========================================
 echo.
 
 REM Parse command line arguments
-set GPU_MODE=
 set BUILD_ARGS=
 
 :parse_args
 if "%~1"=="" goto end_parse
-if /i "%~1"=="--gpu" (
-    set GPU_MODE=1
-    shift
-    goto parse_args
-)
 if /i "%~1"=="--no-cache" (
     set BUILD_ARGS=!BUILD_ARGS! --no-cache
     shift
@@ -61,29 +56,20 @@ if not exist backend_app\.env (
 
 echo.
 echo Build configuration:
-if defined GPU_MODE (
-    echo   Target: runtime-gpu ^(CUDA 12.8^)
-    echo   GPU Mode: enabled
-) else (
-    echo   Target: runtime-cpu
-    echo   GPU Mode: disabled
-)
+echo   Compose file: docker-compose.gpu.yml
+echo   Target: runtime-gpu (CUDA 12.4)
 echo.
 
 REM Stop existing containers
 echo 1. Stopping existing containers...
-docker-compose down 2>nul
+docker-compose -f docker-compose.gpu.yml down 2>nul
 echo [OK] Containers stopped
 echo.
 
 REM Build images
 echo 2. Building Docker images...
 echo    This may take 5-10 minutes on first build...
-if defined GPU_MODE (
-    docker-compose -f docker-compose.yml -f docker-compose.gpu.yml build !BUILD_ARGS!
-) else (
-    docker-compose build !BUILD_ARGS!
-)
+docker-compose -f docker-compose.gpu.yml build !BUILD_ARGS!
 if errorlevel 1 (
     echo [ERROR] Build failed!
     exit /b 1
@@ -93,11 +79,7 @@ echo.
 
 REM Start services
 echo 3. Starting services...
-if defined GPU_MODE (
-    docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
-) else (
-    docker-compose up -d
-)
+docker-compose -f docker-compose.gpu.yml up -d
 if errorlevel 1 (
     echo [ERROR] Failed to start services!
     exit /b 1
@@ -112,7 +94,7 @@ echo.
 
 REM Check service status
 echo Service Status:
-docker-compose ps
+docker-compose -f docker-compose.gpu.yml ps
 echo.
 
 REM Show completion message
@@ -125,17 +107,15 @@ echo   Dashboard:     http://localhost:5001
 echo   Backend API:   http://localhost:5002
 echo   PostgreSQL:    localhost:5432
 echo.
-if defined GPU_MODE (
-    echo GPU Support: ENABLED ^(CUDA 12.8^)
-    echo.
-)
+echo GPU Support: ENABLED (CUDA 12.4)
+echo.
 echo View logs:
-echo   docker-compose logs -f parking
-echo   docker-compose logs -f backend
-echo   docker-compose logs -f postgres
+echo   docker-compose -f docker-compose.gpu.yml logs -f parking
+echo   docker-compose -f docker-compose.gpu.yml logs -f backend
+echo   docker-compose -f docker-compose.gpu.yml logs -f postgres
 echo.
 echo Stop services:
-echo   docker-compose down
+echo   docker-compose -f docker-compose.gpu.yml down
 echo.
 
 pause

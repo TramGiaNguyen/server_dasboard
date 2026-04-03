@@ -1,10 +1,11 @@
 #!/bin/bash
 # Build script for Smart Parking System Docker images
+# Dùng docker-compose.gpu.yml (stack GPU) — xem docker-compose.yml nếu cần CPU-only
 
 set -e
 
 echo "=========================================="
-echo "Smart Parking System - Docker Build"
+echo "Smart Parking System - Docker Build (GPU)"
 echo "=========================================="
 echo ""
 
@@ -29,7 +30,7 @@ fi
 
 # Check if backend_app/.env exists
 if [ ! -f backend_app/.env ]; then
-    echo -e "${YELLOW}Warning: backend_app/.env file not found!${NC}"
+    echo -e "${YELLOW}Warning: backend_app/.env not found!${NC}"
     echo "Creating backend_app/.env..."
     cat > backend_app/.env << EOF
 APP_PORT=5002
@@ -46,18 +47,11 @@ EOF
 fi
 
 # Parse command line arguments
-BUILD_TARGET="runtime-cpu"
 NO_CACHE=""
 PULL=""
-GPU_MODE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --gpu)
-            BUILD_TARGET="runtime-gpu"
-            GPU_MODE="-f docker-compose.gpu.yml"
-            shift
-            ;;
         --no-cache)
             NO_CACHE="--no-cache"
             shift
@@ -68,43 +62,37 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo -e "${RED}Unknown option: $1${NC}"
-            echo "Usage: $0 [--gpu] [--no-cache] [--pull]"
+            echo "Usage: $0 [--no-cache] [--pull]"
             exit 1
             ;;
     esac
 done
 
+COMPOSE="docker-compose -f docker-compose.gpu.yml"
+
 echo "Build configuration:"
-echo "  Target: $BUILD_TARGET"
-echo "  GPU Mode: ${GPU_MODE:-disabled}"
+echo "  Compose file: docker-compose.gpu.yml"
+echo "  Target: runtime-gpu (CUDA 12.4)"
 echo "  No cache: ${NO_CACHE:-false}"
 echo "  Pull base images: ${PULL:-false}"
 echo ""
 
 # Stop existing containers
 echo "1. Stopping existing containers..."
-docker-compose down 2>/dev/null || true
+$COMPOSE down 2>/dev/null || true
 echo -e "${GREEN}✓ Containers stopped${NC}"
 echo ""
 
 # Build images
 echo "2. Building Docker images..."
 echo "   This may take 5-10 minutes on first build..."
-if [ -n "$GPU_MODE" ]; then
-    docker-compose -f docker-compose.yml -f docker-compose.gpu.yml build $NO_CACHE $PULL
-else
-    docker-compose build $NO_CACHE $PULL
-fi
+$COMPOSE build $NO_CACHE $PULL
 echo -e "${GREEN}✓ Images built successfully${NC}"
 echo ""
 
 # Start services
 echo "3. Starting services..."
-if [ -n "$GPU_MODE" ]; then
-    docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
-else
-    docker-compose up -d
-fi
+$COMPOSE up -d
 echo -e "${GREEN}✓ Services started${NC}"
 echo ""
 
@@ -115,7 +103,7 @@ sleep 5
 # Check service status
 echo ""
 echo "Service Status:"
-docker-compose ps
+$COMPOSE ps
 echo ""
 
 # Show logs
@@ -128,15 +116,13 @@ echo "  Dashboard:     http://localhost:5001"
 echo "  Backend API:   http://localhost:5002"
 echo "  PostgreSQL:    localhost:5432"
 echo ""
-if [ -n "$GPU_MODE" ]; then
-    echo "GPU Support: ENABLED (CUDA 12.8)"
-    echo ""
-fi
+echo "GPU Support: ENABLED (CUDA 12.4)"
+echo ""
 echo "View logs:"
-echo "  docker-compose logs -f parking"
-echo "  docker-compose logs -f backend"
-echo "  docker-compose logs -f postgres"
+echo "  docker-compose -f docker-compose.gpu.yml logs -f parking"
+echo "  docker-compose -f docker-compose.gpu.yml logs -f backend"
+echo "  docker-compose -f docker-compose.gpu.yml logs -f postgres"
 echo ""
 echo "Stop services:"
-echo "  docker-compose down"
+echo "  docker-compose -f docker-compose.gpu.yml down"
 echo ""

@@ -7,8 +7,8 @@
 # Usage:
 #   ./cleanup.sh --days 30              # Preview what will be deleted
 #   ./cleanup.sh --days 30 --commit     # Actually delete
-#   docker-compose exec parking python main.py cleanup --days 30 --dry-run
-#   docker-compose exec parking python main.py cleanup --days 30
+#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 30 --dry-run
+#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 30
 # =============================================================================
 
 set -e

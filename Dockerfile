@@ -2,7 +2,7 @@
 # Smart Parking System - Main Application Dockerfile
 # =============================================================================
 # Multi-stage build for optimized image size
-# Supports both CPU and GPU (CUDA 12.4) runtime
+# Supports both CPU and GPU (CUDA 12.4 GPU stack) runtime
 # =============================================================================
 
 # =============================================================================
@@ -41,9 +41,10 @@ RUN grep -v "^torch" requirements.txt | grep -v "^torchvision" > requirements_no
     pip install --no-cache-dir -r requirements_no_torch.txt
 
 # =============================================================================
-# Stage 1b: Builder GPU - Install dependencies for GPU runtime with CUDA 12.8
+# Stage 1b: Builder GPU - Install dependencies for GPU runtime with CUDA 12.4
+# (12.8+ images require newer host drivers; 12.4 matches more NVIDIA drivers)
 # =============================================================================
-FROM nvidia/cuda:12.8.0-base-ubuntu22.04 AS builder-gpu
+FROM nvidia/cuda:12.4.1-base-ubuntu22.04 AS builder-gpu
 
 # Install Python 3.11 and build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -76,8 +77,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /build
 COPY requirements.txt .
 
-# Install PyTorch with CUDA 12.8 support
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu128
+# Install PyTorch with CUDA 12.4 wheels
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu124
 
 # Install other dependencies (excluding torch/torchvision from requirements.txt)
 RUN grep -v "^torch" requirements.txt | grep -v "^torchvision" > requirements_no_torch.txt && \
@@ -134,9 +135,9 @@ EXPOSE 5001
 CMD ["python", "main.py"]
 
 # =============================================================================
-# Stage 3: Runtime - GPU version (CUDA 12.8)
+# Stage 3: Runtime - GPU version (CUDA 12.4)
 # =============================================================================
-FROM nvidia/cuda:12.8.0-base-ubuntu22.04 AS runtime-gpu
+FROM nvidia/cuda:12.4.1-base-ubuntu22.04 AS runtime-gpu
 
 # Install Python 3.11 and runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
