@@ -6,6 +6,7 @@ import time
 import threading
 from datetime import datetime
 from queue import Empty
+from typing import Optional
 
 import numpy as np
 
@@ -105,6 +106,33 @@ def _save_ocr_plate_image(gate_capture_dir: str, track_id: str, plate_text: str,
     except Exception as img_exc:
         print(f"[GATE OCR] Failed to save OCR artifact image for {track_id}: {img_exc}")
         return None
+
+
+def _gate_plate_crop_geometry_ok(plate_img: np.ndarray) -> bool:
+    """Khớp tiêu chí _save_ocr_plate_image — tránh dùng crop 'biển giả' (thân xe/mái) làm chứng cứ."""
+    if plate_img is None or plate_img.size == 0:
+        return False
+    h, w = plate_img.shape[:2]
+    if h < 8 or w < 8:
+        return False
+    ar = float(w) / float(h) if h > 0 else 0.0
+    return w >= 24 and 1.0 <= ar <= 10.0
+
+
+def _vehicle_plate_zone_crop(vehicle_img: np.ndarray) -> Optional[np.ndarray]:
+    """
+    Dải phía dưới ROI xe (biển thường ở cản sau/đuôi), thay vì cả ROI — tránh thumbnail chỉ thấy mái/cột.
+    """
+    if vehicle_img is None or getattr(vehicle_img, "size", 0) == 0:
+        return None
+    h, w = vehicle_img.shape[:2]
+    if h < 12 or w < 12:
+        return vehicle_img.copy()
+    y0 = int(h * 0.48)
+    band = vehicle_img[y0:h, :, :]
+    if band.size == 0:
+        return vehicle_img.copy()
+    return band
 
 
 def _resolve_gate_media_ctx(track_id, gate_vehicle_handoffs: dict):
@@ -258,15 +286,21 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                         update_plate_fifo_entry(track_id, pt, float(v.plate_conf))
 
             if not v.plate_text:
-                # Không đọc được chữ vẫn lưu ảnh (crop biển nếu có, không thì ROI xe).
-                # Trước đây chỉ cập nhật khi track_id ∈ gate_ocr_track_db_ctx (chỉ sau cleanup)
-                # → hầu hết trường hợp không bao giờ ghi image_path lên DB.
+                # Không đọc được chữ: chỉ dùng crop detector nếu hình học giống biển; không thì dải dưới ROI xe.
                 _evidence = None
-                if v.plate_image is not None and v.plate_image.shape[0] >= 8:
+                _suffix = "plate_zone"
+                if (
+                    v.plate_image is not None
+                    and v.plate_image.shape[0] >= 8
+                    and _gate_plate_crop_geometry_ok(v.plate_image)
+                ):
                     track_plate_images[track_id] = _upscale_plate_for_cache(v.plate_image)
                     _evidence = track_plate_images[track_id]
+                    _suffix = "noplate_crop"
                 elif crop_frame is not None and getattr(crop_frame, "size", 0) > 0:
-                    _evidence = crop_frame.copy()
+                    _zone = _vehicle_plate_zone_crop(crop_frame)
+                    if _zone is not None:
+                        _evidence = _zone
 
                 if (
                     _evidence is not None
@@ -278,9 +312,6 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                     if gid:
                         empty_media_saved.add(track_id)
                         try:
-                            _suffix = "noplate_crop" if (
-                                v.plate_image is not None and v.plate_image.shape[0] >= 8
-                            ) else "vehicle"
                             _fname = f"gate_{track_id}_{_suffix}_{int(time.time() * 1000)}.jpg"
                             _p = os.path.join(gate_capture_dir, _fname)
                             cv2.imwrite(_p, _evidence)

@@ -6,6 +6,7 @@ import time
 import threading
 from datetime import datetime
 from queue import Empty
+from typing import Optional
 
 import numpy as np
 
@@ -98,6 +99,29 @@ def _save_ocr_plate_image(gate_capture_dir: str, track_id: str, plate_text: str,
     except Exception as img_exc:
         print(f"[GATE OCR] Failed to save OCR artifact image for {track_id}: {img_exc}")
         return None
+
+
+def _gate_plate_crop_geometry_ok(plate_img: np.ndarray) -> bool:
+    if plate_img is None or plate_img.size == 0:
+        return False
+    h, w = plate_img.shape[:2]
+    if h < 8 or w < 8:
+        return False
+    ar = float(w) / float(h) if h > 0 else 0.0
+    return w >= 24 and 1.0 <= ar <= 10.0
+
+
+def _vehicle_plate_zone_crop(vehicle_img: np.ndarray) -> Optional[np.ndarray]:
+    if vehicle_img is None or getattr(vehicle_img, "size", 0) == 0:
+        return None
+    h, w = vehicle_img.shape[:2]
+    if h < 12 or w < 12:
+        return vehicle_img.copy()
+    y0 = int(h * 0.48)
+    band = vehicle_img[y0:h, :, :]
+    if band.size == 0:
+        return vehicle_img.copy()
+    return band
 
 
 def _ctc_canonical(plate_text: str, existing_plates) -> str:
@@ -212,31 +236,46 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                         update_plate_fifo_entry(track_id, pt, float(v.plate_conf))
 
             if not v.plate_text:
-                if v.plate_image is not None and v.plate_image.shape[0] >= 8:
+                _img = None
+                if (
+                    v.plate_image is not None
+                    and v.plate_image.shape[0] >= 8
+                    and _gate_plate_crop_geometry_ok(v.plate_image)
+                ):
                     if track_id not in track_plate_images:
                         track_plate_images[track_id] = _upscale_plate_for_cache(v.plate_image)
-                    if submit_low and gate_capture_dir and _has_db_ctx and track_id not in empty_media_saved:
-                        ctx = shared_state.gate_ocr_track_db_ctx.get(track_id) or {}
-                        gid = ctx.get('gate_log_id')
-                        sid = ctx.get('session_id')
-                        if gid and track_id in track_plate_images:
-                            empty_media_saved.add(track_id)
-                            try:
-                                _img = track_plate_images[track_id]
-                                _fname = f"gate_{track_id}_crop_{int(time.time() * 1000)}.jpg"
-                                _p = os.path.join(gate_capture_dir, _fname)
-                                cv2.imwrite(_p, _img)
-                                _url = f"/static/gate_captures/{_fname}"
-                                submit_low(
-                                    update_gate_entry_media,
-                                    gid,
-                                    sid,
-                                    _url,
-                                    coalesce_group="gate_entry_media",
-                                    coalesce_key=str(gid),
-                                )
-                            except Exception as _me:
-                                print(f"[GATE OCR] Media-only update failed: {_me}")
+                    _img = track_plate_images.get(track_id)
+                elif crop_frame is not None and getattr(crop_frame, "size", 0) > 0:
+                    _z = _vehicle_plate_zone_crop(crop_frame)
+                    if _z is not None:
+                        _img = _z
+                if (
+                    _img is not None
+                    and submit_low
+                    and gate_capture_dir
+                    and _has_db_ctx
+                    and track_id not in empty_media_saved
+                ):
+                    ctx = shared_state.gate_ocr_track_db_ctx.get(track_id) or {}
+                    gid = ctx.get('gate_log_id')
+                    sid = ctx.get('session_id')
+                    if gid:
+                        empty_media_saved.add(track_id)
+                        try:
+                            _fname = f"gate_{track_id}_noplate_{int(time.time() * 1000)}.jpg"
+                            _p = os.path.join(gate_capture_dir, _fname)
+                            cv2.imwrite(_p, _img)
+                            _url = f"/static/gate_captures/{_fname}"
+                            submit_low(
+                                update_gate_entry_media,
+                                gid,
+                                sid,
+                                _url,
+                                coalesce_group="gate_entry_media",
+                                coalesce_key=str(gid),
+                            )
+                        except Exception as _me:
+                            print(f"[GATE OCR] Media-only update failed: {_me}")
                 continue
 
             if v.plate_image is not None and v.plate_image.shape[0] < 10:

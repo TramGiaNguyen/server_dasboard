@@ -13,6 +13,41 @@ from ocr_utils import crop_expanded_plate, check_legit_plate
 from license_plate_ocr import LicensePlateOCR
 
 
+def _select_best_plate_bbox(boxes, vehicle_image: np.ndarray) -> Optional[np.ndarray]:
+    """
+    Chọn box biển có conf cao nhất sau khi lọc false positive (mái/kính thường nằm phía trên ROI xe).
+    """
+    if boxes is None or len(boxes) == 0:
+        return None
+    if vehicle_image is None or getattr(vehicle_image, "size", 0) == 0:
+        return None
+    vh, vw = vehicle_image.shape[:2]
+    if vh < 16 or vw < 16:
+        return None
+    xyxy = boxes.xyxy.cpu().numpy()
+    confs = boxes.conf.cpu().numpy()
+    scored: List[Tuple[float, np.ndarray]] = []
+    for j in range(xyxy.shape[0]):
+        x1, y1, x2, y2 = xyxy[j].astype(int)
+        pw, ph = x2 - x1, y2 - y1
+        if pw < 8 or ph < 8:
+            continue
+        ar = pw / float(ph) if ph > 0 else 0.0
+        if ar < 1.05 or ar > 12.0:
+            continue
+        rel_w = pw / float(vw)
+        if rel_w < 0.05 or rel_w > 0.95:
+            continue
+        mid_y = (y1 + y2) * 0.5 / float(vh)
+        if mid_y < 0.20 or mid_y > 0.97:
+            continue
+        scored.append((float(confs[j]), np.array([x1, y1, x2, y2], dtype=int)))
+    if not scored:
+        return None
+    scored.sort(key=lambda t: -t[0])
+    return scored[0][1]
+
+
 class VehicleInfo:
     """Data class for vehicle detection results."""
     def __init__(self):
@@ -176,17 +211,13 @@ class LicensePlateDetector:
         
         for idx, vehicle in enumerate(vehicles):
             boxes = results[idx].boxes
-            
-            if len(boxes.xyxy) > 0:
-                # Get first plate detection
-                plate_bbox = boxes.xyxy[0].cpu().numpy().astype(int)
+            plate_bbox = _select_best_plate_bbox(boxes, vehicle.vehicle_image)
+            if plate_bbox is not None:
                 vehicle.plate_bbox = plate_bbox
-                
-                # Crop and expand plate region (50% expansion for better OCR)
                 vehicle.plate_image = crop_expanded_plate(
                     plate_bbox,
                     vehicle.vehicle_image,
-                    expand_ratio=0.50
+                    expand_ratio=0.50,
                 )
     
     def recognize_plates(self, vehicles: List[VehicleInfo]) -> None:
