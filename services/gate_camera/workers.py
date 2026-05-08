@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import threading
+import json
 from datetime import datetime
 from queue import Empty
 from typing import Optional
@@ -64,6 +65,26 @@ from services.vehicle_tracking.tracker import get_tracker
 from database.operations import log_gate_entry, log_gate_exit, update_gate_entry_plate, update_gate_exit_plate, update_gate_entry_media
 from services.vehicle_tracking.models import VehicleTicket
 from shared.rtsp_reconnect import RobustRTSPCapture
+
+
+def _gate_debug_log(hypothesis_id: str, run_id: str, location: str, message: str, data: dict):
+    """Write NDJSON debug log for gate camera pipeline debugging."""
+    try:
+        log_path = r"C:\Users\maous\.cursor\projects\c-Users-maous-Downloads-server-dasboard-master-server-dasboard-master\debug-657050.log"
+        entry = {
+            "id": f"gate_{int(time.time() * 1000)}",
+            "timestamp": int(time.time() * 1000),
+            "sessionId": "657050",
+            "runId": run_id,
+            "hypothesisId": hypothesis_id,
+            "location": location,
+            "message": message,
+            "data": data,
+        }
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def _upscale_plate_for_cache(plate_img: 'np.ndarray') -> 'np.ndarray':
@@ -460,9 +481,19 @@ def render_worker(detector, stable_plate_cache, vehicle_line_crossings_ref,
 
     while not stop_event.is_set():
         render_start = time.time()
+        _dbg_render_loop_count = getattr(render_worker, '_loop_idx', 0)
+        render_worker._loop_idx = _dbg_render_loop_count + 1
         try:
             job = gate_render_queue.get(timeout=0.5)
+            _gate_debug_log("H3", "debug-run",
+                "workers.py:render_worker:job_received",
+                f"Render loop #{_dbg_render_loop_count}: got job from queue, queue_size_before_get={gate_render_queue.qsize()}",
+                {"loop_idx": _dbg_render_loop_count, "job_keys": list(job.keys()) if job else []})
         except Empty:
+            _gate_debug_log("H3", "debug-run",
+                "workers.py:render_worker:queue_empty",
+                "Render loop: queue empty after 0.5s timeout",
+                {"loop_idx": _dbg_render_loop_count})
             continue
 
         frame      = job.get('frame')
@@ -533,8 +564,16 @@ def render_worker(detector, stable_plate_cache, vehicle_line_crossings_ref,
             # --- Encode and store JPEG ---
             _, buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
             jpeg_bytes = buf.tobytes()
+            _gate_debug_log("H1", "debug-run",
+                "workers.py:render_worker:before_lock",
+                "Before acquiring gate_jpeg_lock, jpeg_bytes size",
+                {"jpeg_size": len(jpeg_bytes), "frame_shape": frame.shape if frame is not None else None})
             with shared_state.gate_jpeg_lock:
                 shared_state.gate_latest_jpeg = jpeg_bytes
+            _gate_debug_log("H1", "debug-run",
+                "workers.py:render_worker:after_lock",
+                "After acquiring gate_jpeg_lock, gate_latest_jpeg set",
+                {"jpeg_size": len(jpeg_bytes), "gate_latest_jpeg_is_none": shared_state.gate_latest_jpeg is None})
 
             # --- Emit SocketIO on crossing events ---
             if socketio is not None and crossing_events:
@@ -1505,14 +1544,26 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
             'line3_y': line_3_y,
         }
         # Discard oldest if full (only latest frame matters for display)
+        _qsize_before = gate_render_queue.qsize()
         try:
             gate_render_queue.put_nowait(render_job)
-        except Exception:
+            _gate_debug_log("H1", "debug-run",
+                "workers.py:detect_track:queue_push",
+                "Frame pushed to gate_render_queue",
+                {"frame_count": frame_count, "qsize_before": _qsize_before, "qsize_after": gate_render_queue.qsize()})
+        except Exception as _qe1:
             try:
                 gate_render_queue.get_nowait()
                 gate_render_queue.put_nowait(render_job)
-            except Exception:
-                pass
+                _gate_debug_log("H1", "debug-run",
+                    "workers.py:detect_track:queue_push_replaced",
+                    "Frame pushed to gate_render_queue (discarded old frame)",
+                    {"frame_count": frame_count, "qsize_before": _qsize_before})
+            except Exception as _qe2:
+                _gate_debug_log("H2", "debug-run",
+                    "workers.py:detect_track:queue_push_failed",
+                    "Failed to push frame to gate_render_queue",
+                    {"frame_count": frame_count, "error1": str(_qe1), "error2": str(_qe2)})
 
         # Adaptive sleep — target ~30fps for detect+track loop
         elapsed = time.time() - frame_start
