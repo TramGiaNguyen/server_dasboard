@@ -1,10 +1,8 @@
 """
-Reservation Scheduler Service
-Chạy background job để:
-- Kiểm tra reservations sắp tới
-- Gửi thông báo nhắc nhở (15 phút trước, 5 phút trước)
-- Gửi thông báo quá giờ
-- Tự động hủy reservation quá hạn
+DEPRECATED: This file is replaced by backend_app/services/reservation_scheduler.py.
+The unified version uses DB-based deduplication instead of in-memory sets
+and includes both notification scheduling and auto-cancellation.
+DO NOT start this scheduler -- use the backend_app version instead.
 """
 
 import threading

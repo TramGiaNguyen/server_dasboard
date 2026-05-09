@@ -51,7 +51,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # Allow all hosts / origins
 CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', engineio_logger=False, logger=False)
 
 # Register all routes
 register_routes(app, socketio)
@@ -183,4 +183,5 @@ if __name__ == "__main__":
         host=SERVER_HOST,
         port=SERVER_PORT,
         allow_unsafe_werkzeug=True,
+        debug=False,
     )

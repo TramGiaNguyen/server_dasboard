@@ -635,7 +635,7 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
     is_stream = video_path.lower().startswith(('rtsp://', 'http://', 'https://'))
 
     if is_stream:
-        rtsp_cap = RobustRTSPCapture(video_path, buffer_size=2)  # Giảm buffer từ 3 → 2 để giảm latency
+        rtsp_cap = RobustRTSPCapture(video_path, buffer_size=8)  # Tăng buffer lên 8 để giảm miss detection
         if not rtsp_cap.open():
             print(f"[ERROR] Gate Detect+Track: Failed to open RTSP stream: {video_path}")
             return

@@ -33,6 +33,14 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 # Register mobile app routes
 register_app_routes(app, socketio)
 
+# Start the unified reservation/notification scheduler in a background thread
+try:
+    from backend_app.services.reservation_scheduler import start_scheduler as _start_res_scheduler
+    _start_res_scheduler(socketio)
+    print("[App] Reservation scheduler started")
+except Exception as e:
+    print(f"[App] Failed to start scheduler: {e}")
+
 
 # ============================================================
 # Socket.IO Event Handlers

@@ -1,0 +1,158 @@
+BAO CAO TRIEN KHAI HE THONG DO XE THONG MINH - BDU PARKING
+================================================================
+
+Ngay: Thu 5, Thang 5 nam 2026
+Nguoi thuc hien: Claude (AI Assistant)
+
+================================================================
+PHAN I: CAC VAN DE DA FIX
+================================================================
+
+--------------------------------------------------------------
+VAN DE 1: Flask-SocketIO Greenlet Exhaustion (DA FIX)
+--------------------------------------------------------------
+
+Trieu chung:
+  - Camera bai xe hien thi tot, nhung camera cong KHONG hien thi
+  - Giao dien web BI TREO CUUNG sau khi mo dashboard
+  - Khong the bam nut logout hay tuong tac gi duoc
+  - Khi mo tab test endpoint /test_gate_feed, trinh duyet bi load vo han
+
+Nguyen nhan goc (Root Cause):
+  Flask-SocketIO su dung eventlet - mot thu vien dua tren greenlet (khong phai thread).
+  Trong che do mac dinh, eventlet chi cap mot so luong greenlet han che.
+
+  Khi trinh duyet mo dashboard, no gui 2 request MJPEG stream cung luc:
+    1. /video_feed (camera bai xe)
+    2. /video_feed_gate (camera cong)
+
+  Moi MJPEG stream giu mot ket noi mo vinh vien (long-lived connection).
+  Moi ket noi chiem 1 greenlet. Chi co 2 greenlet cho streaming, Flask/SocketIO
+  KHONG CON greenlet nao de xu ly cac request khac (API, page navigation, logout).
+
+Cach sua:
+  File: main.py
+
+  Thay doi:
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading',
+                         engineio_logger=False, logger=False)
+
+  Them async_mode='threading' de SocketIO dung thread pool thay vi greenlet.
+  Moi request/connection chay trong thread rieng, khong bi gioi han boi so luong
+  greenlet co dinh.
+
+--------------------------------------------------------------
+VAN DE 2: OCR Model File Missing (CAN CHu Y)
+--------------------------------------------------------------
+
+Trieu chung:
+  - Anh crop bien so xe hien thi rat ro rang tren giao dien
+  - Nhung OCR khong nhan dien duoc bien so
+  - Terminal hien loi: [ERROR] Failed to initialize OCR detector
+
+Nguyen nhan goc (Root Cause):
+  OCR hoan toan khong chay duoc vi thieu file model YOLO.
+  Khong co file best_plate_yolov8.pt trong toan bo project tai:
+    services/ocr/LicensePlate_OCR_Standalone/models/
+
+  Loi cu the:
+    [ERROR] Failed to initialize OCR detector:
+    [Errno 2] No such file or directory:
+    '...\services\ocr\LicensePlate_OCR_Standalone\models\best_plate_yolov8.pt'
+
+Cach khac phuc:
+  Can tai file model YOLO vao thu muc:
+    services/ocr/LicensePlate_OCR_Standalone/models/best_plate_yolov8.pt
+
+  File nay duoc train tu truoc (pretrained model). Neu khong co,
+  can lien he nhom phat trien de duoc cung cap.
+
+--------------------------------------------------------------
+VAN DE 3: Flutter Mobile App Compilation Errors (DA FIX)
+--------------------------------------------------------------
+
+Trieu chung:
+  Flutter build that bai voi 2 loi Dart:
+
+  1. Error: Can't have modifier 'static' here.
+     File: lib/services/notification_service.dart, line 13
+
+  2. Error: The getter 'config' isn't defined for the type 'SocketService'.
+     File: lib/services/socket_service.dart, lines 21 va 34
+
+Cach sua:
+
+  1. notification_service.dart (dong 13):
+     Cu: static const _seenKeysPref = 'shown_notif_keys';
+     Moi: const _seenKeysPref = 'shown_notif_keys';
+
+     Ly do: Dart khong cho phep 'static' o cap top-level trong class.
+            Chi cho phep trong class body.
+
+  2. socket_service.dart (dong 3, 21, 34):
+     Cu: import '../config.dart';
+         config.apiBaseUrl, ...
+
+     Moi: import '../config.dart' as config;
+          config.apiBaseUrl, ...
+
+     Ly do: Tranh xung dot ten giua import 'config.dart' voi ten class 'Config'
+            (neu co). Dung prefix 'config.' ro rang hon.
+
+================================================================
+PHAN II: THONG TIN HE THONG
+================================================================
+
+ Cau truc 2 server rieng biet:
+
+ +------------------+--------+----------------------------+
+ | Server           | Port   | Muc dich                   |
+ +------------------+--------+----------------------------+
+ | main.py          | 5001   | Web Dashboard (HTML)       |
+ | backend_app/     | 5002   | API cho Mobile App         |
+ | app.py           |        |                            |
+ +------------------+--------+----------------------------+
+
+ Cau hinh RTSP Camera (.env):
+   - BAI XE: rtsp://FIRA:Fira%402024@192.168.88.118/...
+   - CONG   : rtsp://FIRA:Fira%402024@192.168.88.115/...
+
+ Mobile App Config (bduparking/lib/config.dart):
+   apiBaseUrl = 'http://192.168.69.152:5002'
+
+================================================================
+PHAN III: HUONG DAN KHAI TRIEN
+================================================================
+
+ 1. Chay Dashboard Web:
+    python main.py
+
+ 2. Chay Backend API (cho mobile app):
+    python backend_app/app.py
+
+ 3. Su dung Flutter cho mobile app:
+    cd bduparking
+    flutter run
+
+ 4. Neu co the tren may that (khong phai emulator):
+    - Dat dia chi IP may chu dung
+    - Dam bao firewall cho phep ket noi port 5001, 5002
+    - Dat mat khau mat khau trong .env truoc khi production
+
+ 5. De su dung OCR nhan dien bien so:
+    - Copy file best_plate_yolov8.pt vao
+      services/ocr/LicensePlate_OCR_Standalone/models/
+    - Khoi dong lai server
+
+================================================================
+PHAN IV: GHI CHU
+================================================================
+
+ - Loi pub.dev advisories: Day la loi tam thoi tu server pub.dev,
+   khong anh huong den viec build. Packages da tai ve thanh cong.
+
+ - Loinotify: Muc dich la de GUI canh bao khi dat cho VIP,
+   hieu chinh thanh thong bao phu hop voi thuc te.
+
+================================================================
+Ngay tao: Thu 7, Thang 5 nam 2026

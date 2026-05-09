@@ -140,6 +140,7 @@ def register_routes(app, socketio):
     @app.route('/video_feed_gate')
     def video_feed_gate():
         """MJPEG relay: reads latest frame from background gate processing thread."""
+
         def _get_frame():
             with shared_state.gate_jpeg_lock:
                 return shared_state.gate_latest_jpeg
