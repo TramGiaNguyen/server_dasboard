@@ -217,7 +217,7 @@ matched_vehicles_lock = threading.Lock()
 #    maxsize=2: only latest frame matters for MJPEG; older frames are discarded.
 
 GATE_OCR_BACKFILL_TTL_SEC = 300.0
-GATE_OCR_PROVISIONAL_CONF = 0.60  # was 0.85 — lowered to capture more single-frame results
+GATE_OCR_PROVISIONAL_CONF = 0.40  # lowered to capture more single-frame results
 
 gate_ocr_scheduler_lock = threading.Lock()
 gate_ocr_latest_jobs = {}
@@ -299,7 +299,7 @@ gate_render_queue:   _Queue = _Queue(maxsize=2)
 # for each vehicle. Separates DB write flow from detect_track and ocr_worker.
 
 GATE_DB_WRITER_TIMEOUT_SEC = 8.0   # max wait for OCR
-GATE_DB_WRITER_MIN_CONF    = 0.50  # min conf to consider OCR done
+GATE_DB_WRITER_MIN_CONF    = 0.30  # lowered to accept OCR results earlier
 
 gate_db_pending_lock   = threading.Lock()
 gate_db_pending_records: dict = {}        # {track_id: PendingRecord}

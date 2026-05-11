@@ -199,37 +199,42 @@ def register_routes(app, socketio):
                     'arrival_time': r.arrival_time.strftime('%H:%M') if r.arrival_time else None,
                     'reservation_id': r.reservation_id,
                 }
+
+            slot_id_by_number = {s.slot_number: s.slot_id for s in slots_db}
+
+            merged = []
+            for s in raw_slots:
+                slot_num = s.get('slot_number')
+                status = s.get('status', 'available')
+                plate = s.get('plate')
+                reservation = res_by_slot.get(slot_num)
+                is_vip = slot_num in vip_slot_numbers
+                is_hijacked = False
+
+                if reservation and status == 'occupied' and plate:
+                    res_plate = (reservation.get('plate_text') or '').strip().upper()
+                    slot_plate = (plate or '').strip().upper()
+                    if res_plate and slot_plate and res_plate != slot_plate:
+                        is_hijacked = True
+
+                merged.append({
+                    **s,
+                    'slot_id': slot_id_by_number.get(slot_num),
+                    'is_vip': is_vip,
+                    'reservation': reservation,
+                    'is_hijacked': is_hijacked,
+                })
         finally:
             db.close()
 
-        merged = []
-        for s in raw_slots:
-            slot_num = s.get('slot_number')
-            status = s.get('status', 'available')
-            plate = s.get('plate')
-            reservation = res_by_slot.get(slot_num)
-            is_vip = slot_num in vip_slot_numbers
-            is_hijacked = False
-
-            if reservation and status == 'occupied' and plate:
-                res_plate = (reservation.get('plate_text') or '').strip().upper()
-                slot_plate = (plate or '').strip().upper()
-                if res_plate and slot_plate and res_plate != slot_plate:
-                    is_hijacked = True
-
-            merged.append({
-                **s,
-                'is_vip': is_vip,
-                'reservation': reservation,
-                'is_hijacked': is_hijacked,
-            })
-        return merged
+        return merged, list(vip_slot_numbers)
 
     @app.route('/api/parking/slots')
     def get_all_slots():
-        merged = _merge_slots_with_reservation_vip()
+        merged, vip_numbers = _merge_slots_with_reservation_vip()
         return jsonify({
             'slots': merged,
+            'vip_slot_numbers': vip_numbers,
             'last_update': current_parking_status.get('last_update'),
             'render_seq': _safe_attr('parking_render_seq', current_parking_status.get('render_seq')),
             'render_ts': _safe_attr('parking_render_ts'),
@@ -237,7 +242,7 @@ def register_routes(app, socketio):
 
     @app.route('/api/parking/slots/1-18')
     def get_slots_1_to_18():
-        merged = _merge_slots_with_reservation_vip()
+        merged, _ = _merge_slots_with_reservation_vip()
         slots_1_to_18 = [slot for slot in merged if slot['slot_number'] <= 18]
         occupied_count = sum(1 for slot in slots_1_to_18 if slot['status'] == 'occupied')
         available_count = len(slots_1_to_18) - occupied_count
@@ -254,7 +259,7 @@ def register_routes(app, socketio):
 
     @app.route('/api/parking/slot/<int:slot_number>')
     def get_single_slot(slot_number):
-        merged = _merge_slots_with_reservation_vip()
+        merged, _ = _merge_slots_with_reservation_vip()
         if slot_number < 1 or slot_number > len(merged):
             return jsonify({'error': 'Invalid slot number'}), 404
 

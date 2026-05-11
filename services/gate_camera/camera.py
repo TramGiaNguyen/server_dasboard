@@ -105,8 +105,8 @@ def get_ocr_detector():
                 vehicle_model=None,   # Skip: gate uses shared yolov8l + coco for vehicle detection
                 ocr_method="onnx",
                 vehicle_conf=0.5,
-                plate_conf=0.20,
-                ocr_conf=0.4
+                plate_conf=0.10,
+                ocr_conf=0.25
             )
             print("[INFO] OCR detector initialized successfully!")
         except Exception as e:

@@ -31,8 +31,8 @@ def perspective_crop(img, points):
 
 class DetAndRecONNXPipeline:
     def __init__(self,
-                 box_thresh=0.6, 
-                 unclip_ratio=1.6,
+                 box_thresh=0.3,
+                 unclip_ratio=2.0,
                  text_det_onnx_model="",
                  text_rec_onnx_model="",
                  text_rec_dict="ppocr_keys_v1.txt"):

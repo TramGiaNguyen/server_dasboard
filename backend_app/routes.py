@@ -235,13 +235,18 @@ def register_app_routes(app, socketio=None):
     @app.route('/api/app/slots/available', methods=['GET'])
     @app_auth_required
     def app_slots_available(user):
-        """Proxy to main backend /api/parking/slots to get live slot availability with VIP + reservation merge."""
+        """Proxy to main backend /api/parking/slots and filter to only show available (non-occupied) slots."""
         main_url = os.getenv('MAIN_APP_URL', 'http://localhost:5001')
         params = {k: v for k, v in request.args.items()}
         try:
             resp = requests.get(f'{main_url}/api/parking/slots', params=params, timeout=5)
             resp.raise_for_status()
-            return resp.json(), 200
+            data = resp.json()
+            slots = data.get('slots', [])
+            # Chi tra ve slot khong co xe (status != 'occupied')
+            available_slots = [s for s in slots if s.get('status') != 'occupied']
+            data['slots'] = available_slots
+            return jsonify(data), 200
         except Exception as e:
             return jsonify({'error': f'Main server unavailable: {e}'}), 502
 

@@ -204,7 +204,7 @@ class LicensePlateDetector:
         results = self.plate_detector(
             vehicle_images,
             verbose=False,
-            imgsz=320,
+            imgsz=640,
             device=self.device,
             conf=self.plate_conf
         )
@@ -223,15 +223,26 @@ class LicensePlateDetector:
     def recognize_plates(self, vehicles: List[VehicleInfo]) -> None:
         """
         Recognize text on license plates.
-        
+
         Args:
             vehicles: List of VehicleInfo objects (modified in-place)
         """
         for vehicle in vehicles:
             if vehicle.plate_image is not None:
+                ph, pw = vehicle.plate_image.shape[:2]
                 text, conf = self.ocr.recognize(vehicle.plate_image)
                 vehicle.plate_text = text
                 vehicle.plate_conf = conf
+                # // #region debug log
+                import sys, os
+                _log = os.environ.get('DEBUG_PLATE', '')
+                if _log and vehicle.track_id and _log in vehicle.track_id:
+                    sys.stdout.write(
+                        f"[DEBUG CROP] track={vehicle.track_id} "
+                        f"crop={pw}x{ph} text='{text}' conf={float(conf):.2f}\n"
+                    )
+                    sys.stdout.flush()
+                # // #endregion
     
     def process(self, image: np.ndarray) -> List[VehicleInfo]:
         """

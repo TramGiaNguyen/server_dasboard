@@ -231,6 +231,8 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
     """
     print("[GATE] OCR Worker started")
     empty_media_saved = set()
+    # Luu crop tu frame dau tien OCR thanh cong (text hop le + conf cao) cho moi track
+    first_valid_plate_image_by_track = {}
 
     while not stop_event.is_set():
         # Clean up memory occasionally
@@ -286,17 +288,39 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
             if runtime is not None and (v.plate_text or v.plate_image is not None):
                 runtime.mark_emit()
 
+            # // #region debug log - save first plate crop per track for inspection
+            _debug_dir = os.environ.get('DEBUG_CROP_DIR', '')
+            if _debug_dir and v.plate_image is not None and first_valid_plate_image_by_track.get(track_id) is None:
+                try:
+                    _fh, _fw = v.plate_image.shape[:2]
+                    _tag = (v.plate_text or 'nocrop').strip()[:12]
+                    _fn = os.path.join(_debug_dir, f"DEBUG_{track_id}_crop_{_fw}x{_fh}_{_tag.replace(' ', '_')}.jpg")
+                    cv2.imwrite(_fn, v.plate_image)
+                    sys.stdout.write(f"[DEBUG CROP SAVE] {track_id} -> {os.path.basename(_fn)} crop={_fw}x{_fh} text='{v.plate_text}'\n")
+                    sys.stdout.flush()
+                except Exception as _e:
+                    pass
+            # // #endregion
+
             ocr_image_path = None
             ocr_ts = int(time.time() * 1000)
+            # Luu crop image tu frame dau tien OCR thanh cong (text hop le + conf cao)
+            first_valid_plate_image = first_valid_plate_image_by_track.get(track_id)
+            if v.plate_image is not None and v.plate_text and len(v.plate_text.strip()) >= 3:
+                if first_valid_plate_image is None:
+                    first_valid_plate_image_by_track[track_id] = v.plate_image
+                    first_valid_plate_image = v.plate_image
 
             # Phase 5: provisional single-frame high confidence
             if v.plate_text and len(v.plate_text.strip()) >= 3 and float(v.plate_conf or 0) >= GATE_OCR_PROVISIONAL_CONF:
                 pt = v.plate_text.strip()
                 prev = best_plate_by_track.get(track_id)
                 if prev is None or float(v.plate_conf) > float(prev.get('conf', 0)):
-                    if v.plate_image is not None:
+                    # Dung crop tu frame dau tien thanh cong, khong phai frame hien tai
+                    img_to_save = first_valid_plate_image if first_valid_plate_image is not None else v.plate_image
+                    if img_to_save is not None:
                         ocr_image_path = _save_ocr_plate_image(
-                            gate_capture_dir, track_id, pt, v.plate_image
+                            gate_capture_dir, track_id, pt, img_to_save
                         )
                     best_plate_by_track[track_id] = {'plate': pt, 'conf': float(v.plate_conf)}
                     if ocr_image_path:
@@ -406,17 +430,21 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                 track_votes[plate_text_final] = {'votes': 0, 'best_conf': 0.0}
             r = track_votes[plate_text_final]
             r['votes'] += 1
-            if v.plate_conf > r['best_conf']:
-                r['best_conf'] = v.plate_conf
+            if float(v.plate_conf) > r['best_conf']:
+                r['best_conf'] = float(v.plate_conf)
 
-            if track_votes:
-                best_text = max(track_votes, key=lambda t: track_votes[t]['votes'] * track_votes[t]['best_conf'])
-                best_conf = track_votes[best_text]['best_conf']
-                prev = best_plate_by_track.get(track_id)
-                if prev is None or prev['plate'] != best_text or best_conf > prev['conf']:
+                if track_votes:
+                    best_text = max(track_votes, key=lambda t: track_votes[t]['votes'] * track_votes[t]['best_conf'])
+                    best_conf = track_votes[best_text]['best_conf']
+                    prev = best_plate_by_track.get(track_id)
+                    # Neu text thay doi → reset de retry voi crop moi tu frame hien tai
+                    if prev is not None and prev['plate'] != best_text:
+                        ocr_image_path = None
                     if ocr_image_path is None and v.plate_image is not None:
+                        # Neu save fail (ty le loi), de frame tiep thu lai
+                        img_to_save = first_valid_plate_image if first_valid_plate_image is not None else v.plate_image
                         ocr_image_path = _save_ocr_plate_image(
-                            gate_capture_dir, track_id, best_text, v.plate_image
+                            gate_capture_dir, track_id, best_text, img_to_save
                         )
                     if prev is None:
                         print(f"[GATE OCR] Track {track_id}: new plate {best_text} (conf={best_conf:.2f}, votes={track_votes[best_text]['votes']})")
@@ -458,8 +486,11 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                         update_plate_fifo_entry(track_id, best_text, best_conf)
 
         except Exception as exc:
+            import traceback
             print(f"[GATE OCR] Worker error for track {track_id}: {exc}")
+            traceback.print_exc()
 
+    first_valid_plate_image_by_track.clear()
     print("[GATE] OCR Worker stopped")
 
 
@@ -887,16 +918,12 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                                     gate_log_id = r_store.get('gate_log_id')
                                     if gate_log_id:
                                         artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
-                                        artifact_img = artifact.get('image_path')
-                                        if not artifact_img:
-                                            # Keep pending until OCR artifact image exists for text-image coupling.
-                                            continue
                                         record['exit_updated'] = True
                                         # GateDBWriter handles DB write — update pending record
                                         gate_db_pending_update(vehicle_id,
                                             plate=bp['plate'],
                                             conf=bp['conf'],
-                                            image_path=artifact_img,
+                                            image_path=artifact.get('image_path'),
                                             ocr_ts=artifact.get('ocr_ts'),
                                             status='ocr_done' if bp['conf'] >= GATE_DB_WRITER_MIN_CONF else 'pending',
                                         )
@@ -1520,9 +1547,9 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                 _latest_plate = None
                 _latest_conf  = 0.0
                 for veh in filtered_vehicles:
-                    if veh.plate_text and veh.plate_conf > _latest_conf:
+                    if veh.plate_text and float(veh.plate_conf) > _latest_conf:
                         _latest_plate = veh.plate_text
-                        _latest_conf  = veh.plate_conf
+                        _latest_conf  = float(veh.plate_conf)
                 gate_ocr_results_dict['latest_plate'] = _latest_plate
                 gate_ocr_results_dict['latest_plate_confidence'] = _latest_conf
 
