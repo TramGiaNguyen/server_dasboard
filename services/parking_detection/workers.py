@@ -506,6 +506,7 @@ def detect_track_worker(
                 slot_idx = slot_num - 1
                 if 0 <= slot_idx < len(parking_space_status):
                     parking_space_status[slot_idx] = len(vehicles)
+            overlapping_vehicles = parked_info.get('overlapping', [])
 
         r.parking_space_status = parking_space_status
         r.outside_vehicles = outside_vehicles

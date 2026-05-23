@@ -324,6 +324,8 @@ def draw_parked_vehicles(
                     label = f"Overlap {slot_num} | ID:{track_id}"
                     overlapping_vehicles.append({
                         'slot': slot_num,
+                        'area': i,
+                        'class': class_name,
                         'track_id': track_id,
                         'bbox': [x1, y1, x2, y2],
                     })
