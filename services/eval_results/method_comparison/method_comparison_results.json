@@ -1,0 +1,319 @@
+{
+  "config": {
+    "video": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\static\\video\\CAM_PARKING.mp4",
+    "slot_gt": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\annotations\\CAM_PARKING_slot_state_gt.csv",
+    "frame_list": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\annotations\\frame_numbers.txt",
+    "yolo_confidence": 0.3,
+    "model_size": "l",
+    "hyst_threshold": 45,
+    "iou_threshold": 0.3,
+    "fps": 30.0,
+    "frames_evaluated": 1000
+  },
+  "methods": {
+    "Rectangular ROI": {
+      "method": "Rectangular ROI",
+      "hysteresis": false,
+      "inner_core": false,
+      "accuracy": 18.12,
+      "macro_f1_3class": 10.23,
+      "weighted_f1_3class": 5.56,
+      "flickering_rate": 0.0,
+      "flickering_transitions": 0,
+      "total_transitions": 0,
+      "stability_score": 18.1211,
+      "per_class": {
+        "available": {
+          "precision": 18.12,
+          "recall": 100.0,
+          "f1": 30.68,
+          "support": 3443,
+          "tp": 3443,
+          "fp": 15557,
+          "fn": 0
+        },
+        "occupied": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 15517,
+          "tp": 0,
+          "fp": 0,
+          "fn": 15517
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        }
+      },
+      "outside_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2161,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping"
+        ],
+        "matrix": [
+          [
+            3443,
+            0,
+            0
+          ],
+          [
+            15517,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000,
+      "elapsed_seconds": 0.0
+    },
+    "Polygon Only": {
+      "method": "Polygon Only",
+      "hysteresis": false,
+      "inner_core": false,
+      "accuracy": 18.12,
+      "macro_f1_3class": 10.23,
+      "weighted_f1_3class": 5.56,
+      "flickering_rate": 0.0,
+      "flickering_transitions": 0,
+      "total_transitions": 0,
+      "stability_score": 18.1211,
+      "per_class": {
+        "available": {
+          "precision": 18.12,
+          "recall": 100.0,
+          "f1": 30.68,
+          "support": 3443,
+          "tp": 3443,
+          "fp": 15557,
+          "fn": 0
+        },
+        "occupied": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 15517,
+          "tp": 0,
+          "fp": 0,
+          "fn": 15517
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        }
+      },
+      "outside_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2161,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping"
+        ],
+        "matrix": [
+          [
+            3443,
+            0,
+            0
+          ],
+          [
+            15517,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000,
+      "elapsed_seconds": 0.0
+    },
+    "Polygon + Inner-Core": {
+      "method": "Polygon + Inner-Core",
+      "hysteresis": false,
+      "inner_core": true,
+      "accuracy": 18.12,
+      "macro_f1_3class": 10.23,
+      "weighted_f1_3class": 5.56,
+      "flickering_rate": 0.0,
+      "flickering_transitions": 0,
+      "total_transitions": 0,
+      "stability_score": 18.1211,
+      "per_class": {
+        "available": {
+          "precision": 18.12,
+          "recall": 100.0,
+          "f1": 30.68,
+          "support": 3443,
+          "tp": 3443,
+          "fp": 15557,
+          "fn": 0
+        },
+        "occupied": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 15517,
+          "tp": 0,
+          "fp": 0,
+          "fn": 15517
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        }
+      },
+      "outside_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2161,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping"
+        ],
+        "matrix": [
+          [
+            3443,
+            0,
+            0
+          ],
+          [
+            15517,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000,
+      "elapsed_seconds": 0.0
+    },
+    "Proposed Framework": {
+      "method": "Proposed Framework",
+      "hysteresis": true,
+      "inner_core": true,
+      "accuracy": 18.12,
+      "macro_f1_3class": 10.23,
+      "weighted_f1_3class": 5.56,
+      "flickering_rate": 0.0,
+      "flickering_transitions": 0,
+      "total_transitions": 6,
+      "stability_score": 18.1211,
+      "per_class": {
+        "available": {
+          "precision": 18.12,
+          "recall": 100.0,
+          "f1": 30.68,
+          "support": 3443,
+          "tp": 3443,
+          "fp": 15557,
+          "fn": 0
+        },
+        "occupied": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 15517,
+          "tp": 0,
+          "fp": 0,
+          "fn": 15517
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        }
+      },
+      "outside_metrics": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2161,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping"
+        ],
+        "matrix": [
+          [
+            3443,
+            0,
+            0
+          ],
+          [
+            15517,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000,
+      "elapsed_seconds": 0.31
+    }
+  }
+}

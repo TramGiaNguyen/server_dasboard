@@ -1,0 +1,269 @@
+{
+  "count": 31,
+  "min_frames": 0,
+  "max_frames": 16651,
+  "mean_frames": 1079.58,
+  "median_frames": 30.0,
+  "std_frames": 3188.55,
+  "p95_frames": 5371,
+  "p99_frames": 13727,
+  "min_sec": 0.0,
+  "max_sec": 555.033,
+  "mean_sec": 35.986,
+  "median_sec": 1.0,
+  "std_sec": 106.285,
+  "p95_sec": 179.05,
+  "p99_sec": 457.583,
+  "fps": 30.0,
+  "hysteresis_threshold": 45,
+  "transitions": [
+    {
+      "slot": 0,
+      "gt_frame": 997,
+      "pred_frame": 1023,
+      "latency_frames": 26,
+      "latency_sec": 0.867,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 1,
+      "gt_frame": 2537,
+      "pred_frame": 2573,
+      "latency_frames": 36,
+      "latency_sec": 1.2,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 4949,
+      "pred_frame": 4963,
+      "latency_frames": 14,
+      "latency_sec": 0.467,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 5107,
+      "pred_frame": 7859,
+      "latency_frames": 2752,
+      "latency_sec": 91.733,
+      "to_state": "available"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 7792,
+      "pred_frame": 7808,
+      "latency_frames": 16,
+      "latency_sec": 0.533,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 7865,
+      "pred_frame": 9783,
+      "latency_frames": 1918,
+      "latency_sec": 63.933,
+      "to_state": "available"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 9174,
+      "pred_frame": 9718,
+      "latency_frames": 544,
+      "latency_sec": 18.133,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 10174,
+      "pred_frame": 10200,
+      "latency_frames": 26,
+      "latency_sec": 0.867,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 2,
+      "gt_frame": 10347,
+      "pred_frame": 10388,
+      "latency_frames": 41,
+      "latency_sec": 1.367,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 4,
+      "gt_frame": 15975,
+      "pred_frame": 16195,
+      "latency_frames": 220,
+      "latency_sec": 7.333,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 4,
+      "gt_frame": 16003,
+      "pred_frame": 16003,
+      "latency_frames": 0,
+      "latency_sec": 0.0,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 4,
+      "gt_frame": 16165,
+      "pred_frame": 16195,
+      "latency_frames": 30,
+      "latency_sec": 1.0,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 4,
+      "gt_frame": 16438,
+      "pred_frame": 16479,
+      "latency_frames": 41,
+      "latency_sec": 1.367,
+      "to_state": "available"
+    },
+    {
+      "slot": 5,
+      "gt_frame": 14297,
+      "pred_frame": 14299,
+      "latency_frames": 2,
+      "latency_sec": 0.067,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 8,
+      "gt_frame": 7865,
+      "pred_frame": 8010,
+      "latency_frames": 145,
+      "latency_sec": 4.833,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 8,
+      "gt_frame": 7886,
+      "pred_frame": 7893,
+      "latency_frames": 7,
+      "latency_sec": 0.233,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 8,
+      "gt_frame": 7983,
+      "pred_frame": 8010,
+      "latency_frames": 27,
+      "latency_sec": 0.9,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 8,
+      "gt_frame": 8179,
+      "pred_frame": 24830,
+      "latency_frames": 16651,
+      "latency_sec": 555.033,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 8,
+      "gt_frame": 23556,
+      "pred_frame": 23557,
+      "latency_frames": 1,
+      "latency_sec": 0.033,
+      "to_state": "available"
+    },
+    {
+      "slot": 9,
+      "gt_frame": 5107,
+      "pred_frame": 5142,
+      "latency_frames": 35,
+      "latency_sec": 1.167,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 14,
+      "gt_frame": 1300,
+      "pred_frame": 1301,
+      "latency_frames": 1,
+      "latency_sec": 0.033,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 15,
+      "gt_frame": 22684,
+      "pred_frame": 29590,
+      "latency_frames": 6906,
+      "latency_sec": 230.2,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 15,
+      "gt_frame": 29573,
+      "pred_frame": 29590,
+      "latency_frames": 17,
+      "latency_sec": 0.567,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 16,
+      "gt_frame": 3117,
+      "pred_frame": 3139,
+      "latency_frames": 22,
+      "latency_sec": 0.733,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 18134,
+      "pred_frame": 18169,
+      "latency_frames": 35,
+      "latency_sec": 1.167,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 25588,
+      "pred_frame": 29425,
+      "latency_frames": 3837,
+      "latency_sec": 127.9,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 25616,
+      "pred_frame": 25624,
+      "latency_frames": 8,
+      "latency_sec": 0.267,
+      "to_state": "available"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 29401,
+      "pred_frame": 29425,
+      "latency_frames": 24,
+      "latency_sec": 0.8,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 29430,
+      "pred_frame": 29470,
+      "latency_frames": 40,
+      "latency_sec": 1.333,
+      "to_state": "occupied"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 36811,
+      "pred_frame": 36845,
+      "latency_frames": 34,
+      "latency_sec": 1.133,
+      "to_state": "overlapping"
+    },
+    {
+      "slot": 18,
+      "gt_frame": 36916,
+      "pred_frame": 36927,
+      "latency_frames": 11,
+      "latency_sec": 0.367,
+      "to_state": "available"
+    }
+  ]
+}

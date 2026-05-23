@@ -9,10 +9,10 @@ env/
 ENV/
 .venv
 
-# Environment variables (contains sensitive data)
+# Secrets — never commit
 .env
-*.env
-!.env.example
+.env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -36,9 +36,25 @@ bduparking/
 *.tar.gz
 *.7z
 
+# Large video / cache / pickle artifacts (do not push)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pkl
+*.pickle
+static/video/
+eval_results/slot_scan_cache.json
+
 # Capture folders (runtime generated)
 static/gate_captures/
 static/parking_captures/
+
+# Runtime capture images — do not commit
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
 
 # Keep .gitkeep files in empty directories
 !.gitkeep
@@ -67,3 +83,6 @@ test_mobile_api.py
 *.tmp
 *.bak
 *.swp
+
+# Runtime cache
+.cache/

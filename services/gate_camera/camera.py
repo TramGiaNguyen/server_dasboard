@@ -65,7 +65,7 @@ import shared.state as shared_state
 from services.gate_camera.pipeline import GatePipelineRuntime
 from services.gate_camera.workers import ocr_worker, render_worker, detect_track_worker, gate_db_writer_worker
 
-from config import COCO_FILE_PATH, GATE_LINE_1_Y, GATE_LINE_2_Y, GATE_LINE_3_Y, GATE_LINE_THICKNESS
+from config import COCO_FILE_PATH, GATE_LINE_1_Y, GATE_LINE_2_Y, GATE_LINE_3_Y, GATE_LINE_THICKNESS, GATE_OCR_WORKERS
 from database.operations import update_gate_entry_plate, update_gate_entry_media
 
 # Capture save directory for best plate crops
@@ -264,15 +264,23 @@ def process_gate_video_stream(video_url, socketio=None, gate_ocr_results_dict=No
     # ---- Launch worker threads ----
     detector = get_ocr_detector()
 
-    ocr_thread = threading.Thread(
-        target=ocr_worker,
-        args=(detector, plate_votes_by_track, best_plate_by_track,
-              track_plate_images, stable_plate_cache, best_plate_img_cache,
-              gate_vehicle_handoffs, _upsert_plate_fifo_for_track, _stop,
-              runtime.submit_low, GATE_CAPTURE_DIR, runtime),
-        daemon=True,
-        name="GateOCRWorker",
-    )
+    # Shared lock for the plate-detector YOLO model (NOT thread-safe). The ONNX
+    # text recogniser is thread-safe and runs concurrently outside the lock.
+    _ocr_detector_lock = threading.Lock() if GATE_OCR_WORKERS > 1 else None
+
+    ocr_threads = []
+    for _wid in range(max(1, GATE_OCR_WORKERS)):
+        _t = threading.Thread(
+            target=ocr_worker,
+            args=(detector, plate_votes_by_track, best_plate_by_track,
+                  track_plate_images, stable_plate_cache, best_plate_img_cache,
+                  gate_vehicle_handoffs, _upsert_plate_fifo_for_track, _stop,
+                  runtime.submit_low, GATE_CAPTURE_DIR, runtime,
+                  _wid, _ocr_detector_lock),
+            daemon=True,
+            name=f"GateOCRWorker-{_wid}",
+        )
+        ocr_threads.append(_t)
 
     render_thread = threading.Thread(
         target=render_worker,
@@ -305,7 +313,8 @@ def process_gate_video_stream(video_url, socketio=None, gate_ocr_results_dict=No
         name="GateDetectTrackWorker",
     )
 
-    ocr_thread.start()
+    for _t in ocr_threads:
+        _t.start()
     render_thread.start()
     detect_thread.start()
 

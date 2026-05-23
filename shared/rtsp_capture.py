@@ -116,12 +116,31 @@ class RTSPCapture:
             wait_seconds: How long to wait for the background thread to fill
                           the queue with fresh frames.
         """
-        while not self._queue.empty():
+        self.drain()
+        time.sleep(wait_seconds)
+
+    def drain(self) -> int:
+        """
+        Drop every frame currently buffered, do NOT sleep. Returns the number
+        of frames that were discarded.
+
+        Use this when the worker has just finished a slow iteration (e.g. a
+        GPU stall) and wants to read the *freshest* frame next, instead of a
+        frame that became stale while the worker was busy. Cheap to call —
+        non-blocking, no I/O.
+        """
+        dropped = 0
+        while True:
             try:
                 self._queue.get_nowait()
+                dropped += 1
             except Empty:
                 break
-        time.sleep(wait_seconds)
+        return dropped
+
+    def qsize(self) -> int:
+        """Current number of buffered frames (approximate)."""
+        return self._queue.qsize()
 
     def isOpened(self) -> bool:
         """True if the background reader thread is alive."""

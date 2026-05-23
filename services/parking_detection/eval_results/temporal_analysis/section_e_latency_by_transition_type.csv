@@ -1,0 +1,10 @@
+mode,transition,count,mean_frames,median_frames,min_frames,max_frames
+ON_OFF,available -> occupied,7,13260.43,9723.0,1129,36905
+ON_OFF,occupied -> available,2,5366.0,5366.0,1021,9711
+ON_OFF,overlapping -> available,2,10326.0,10326.0,7782,12870
+ON_OFF,overlapping -> occupied,4,5296.25,4569.5,1686,10360
+ON_ON,available -> occupied,7,13260.43,9723.0,1129,36905
+ON_ON,available -> overlapping,2,16547.0,16547.0,16047,17047
+ON_ON,occupied -> available,2,5343.5,5343.5,1021,9666
+ON_ON,overlapping -> available,2,10287.5,10287.5,7737,12838
+ON_ON,overlapping -> occupied,4,5296.25,4569.5,1686,10360

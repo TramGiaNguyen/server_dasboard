@@ -5,15 +5,15 @@
 # Removes old database records and orphaned image files.
 #
 # Usage:
-#   ./cleanup.sh --days 30              # Preview what will be deleted
-#   ./cleanup.sh --days 30 --commit     # Actually delete
-#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 30 --dry-run
-#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 30
+#   ./cleanup.sh --days 7              # Preview what will be deleted
+#   ./cleanup.sh --days 7 --commit     # Actually delete
+#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 7 --dry-run
+#   docker-compose -f docker-compose.gpu.yml exec parking python main.py cleanup --days 7
 # =============================================================================
 
 set -e
 
-DAYS=30
+DAYS=7
 COMMIT=false
 
 # Parse arguments
@@ -35,14 +35,14 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [--days N] [--commit]"
             echo ""
             echo "Options:"
-            echo "  --days N     Number of days to retain (default: 30)"
+            echo "  --days N     Number of days to retain (default: 7)"
             echo "  --commit     Actually delete records and files (default is dry-run)"
             echo "  --dry-run    Show what would be deleted (default)"
             echo ""
             echo "Examples:"
-            echo "  $0 --days 30            # Preview cleanup, keep 30 days"
-            echo "  $0 --days 30 --commit   # Run cleanup, keep 30 days"
+            echo "  $0 --days 7             # Preview cleanup, keep 7 days"
             echo "  $0 --days 7 --commit    # Run cleanup, keep 7 days"
+            echo "  $0 --days 30 --commit   # Run cleanup, keep 30 days"
             exit 0
             ;;
         *)

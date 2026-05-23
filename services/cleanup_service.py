@@ -16,11 +16,11 @@ Image directories cleaned:
 Usage:
     # Python import
     from services.cleanup_service import cleanup_old_records
-    cleanup_old_records(days=30, dry_run=False)
+    cleanup_old_records(days=7, dry_run=False)
 
     # CLI (after integrating into main.py)
-    python main.py cleanup --days 30 --dry-run
-    python main.py cleanup --days 30
+    python main.py cleanup --days 7 --dry-run
+    python main.py cleanup --days 7
 """
 
 import os
@@ -116,7 +116,7 @@ class CleanupResult:
 
 
 # ── Core cleanup logic ─────────────────────────────────────────────────────────
-def cleanup_old_records(days: int = 30, dry_run: bool = False) -> CleanupResult:
+def cleanup_old_records(days: int = 7, dry_run: bool = False) -> CleanupResult:
     """
     Remove old parking records and orphaned image files.
 
@@ -294,7 +294,7 @@ def _delete_orphan_images(
 
 
 # ── Scheduled wrapper ─────────────────────────────────────────────────────────
-def run_scheduled_cleanup(days: int = 30):
+def run_scheduled_cleanup(days: int = 7):
     """
     Called by the background scheduler.
     Silently logs errors so the scheduler thread doesn't crash.
@@ -314,8 +314,8 @@ if __name__ == '__main__':
         description='Cleanup old parking records and orphaned images.'
     )
     parser.add_argument(
-        '--days', type=int, default=30,
-        help='Number of days to retain (default: 30)'
+        '--days', type=int, default=7,
+        help='Number of days to retain (default: 7)'
     )
     parser.add_argument(
         '--dry-run', action='store_true',

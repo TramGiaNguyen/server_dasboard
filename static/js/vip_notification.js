@@ -1,5 +1,5 @@
 // VIP Slot Notification System
-// Hiển thị popup thông báo khi admin đánh dấu slot VIP
+// Displays popup notification when admin marks VIP slots
 
 class VIPNotification {
     constructor() {
@@ -8,7 +8,7 @@ class VIPNotification {
     }
 
     init() {
-        // Tạo container cho notifications
+        // Create container for notifications
         this.container = document.createElement('div');
         this.container.id = 'vip-notification-container';
         this.container.style.cssText = `
@@ -133,22 +133,22 @@ class VIPNotification {
 
         const slotList = slotNumbers.map(n => `Slot ${n}`).join(', ');
         const message = slotNumbers.length === 1
-            ? `Slot ${slotNumbers[0]} đã được đánh dấu dành cho khách VIP. Vui lòng chú ý đừng để ai đậu xe vào đó trừ VIP.`
-            : `Các slot ${slotList} đã được đánh dấu dành cho khách VIP. Vui lòng chú ý đừng để ai đậu xe vào đó trừ VIP.`;
+            ? `Slot ${slotNumbers[0]} has been marked for VIP guests. Please ensure no one parks there except VIPs.`
+            : `Slots ${slotList} have been marked for VIP guests. Please ensure no one parks there except VIPs.`;
 
         notification.innerHTML = `
             <button class="vip-notification-close" onclick="this.parentElement.remove()">×</button>
             <div class="vip-notification-title">
                 <span class="vip-icon">★</span>
-                <span>Thông Báo Slot VIP</span>
+                <span>VIP Slot Notification</span>
             </div>
             <div class="vip-notification-message">${message}</div>
         `;
 
         this.container.appendChild(notification);
 
-        // Persistent notification - không tự động tắt
-        // User phải click nút close để đóng
+        // Persistent notification - does not auto-dismiss
+        // User must click close button to dismiss
     }
 }
 

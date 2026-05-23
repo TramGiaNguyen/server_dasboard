@@ -1,0 +1,404 @@
+{
+  "config": {
+    "video": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\static\\video\\CAM_PARKING.mp4",
+    "slot_gt": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\annotations\\CAM_PARKING_slot_state_gt.csv",
+    "frame_list": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\annotations\\frame_numbers.txt",
+    "yolo_confidence": 0.3,
+    "model_size": "l",
+    "hysteresis_threshold": 45,
+    "sections": "ce",
+    "fps": 30.0,
+    "full_video_frames": 41314,
+    "video_range": "6-41319"
+  },
+  "section_c": {
+    "Hyst_OFF_Inner_OFF": {
+      "mode": "Hyst_OFF_Inner_OFF",
+      "hysteresis": false,
+      "inner_core": false,
+      "accuracy": 99.77,
+      "macro_precision": 49.93,
+      "macro_recall": 49.98,
+      "macro_f1": 49.96,
+      "macro_f1_3class": 66.61,
+      "weighted_f1_3class": 99.67,
+      "flickering_rate": 0.1842,
+      "flickering_transitions": 35,
+      "total_transitions": 0,
+      "stability_score": 99.7737,
+      "per_class": {
+        "available": {
+          "precision": 100.0,
+          "recall": 99.91,
+          "f1": 99.96,
+          "support": 3443,
+          "tp": 3440,
+          "fp": 0,
+          "fn": 3
+        },
+        "occupied": {
+          "precision": 99.72,
+          "recall": 100.0,
+          "f1": 99.86,
+          "support": 15517,
+          "tp": 15517,
+          "fp": 43,
+          "fn": 0
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        },
+        "outside": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "outside_metrics": {
+        "precision": 86.39,
+        "recall": 88.15,
+        "f1": 87.27,
+        "tp": 1905,
+        "fp": 300,
+        "fn": 256,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping",
+          "outside"
+        ],
+        "matrix": [
+          [
+            3440,
+            3,
+            0,
+            0
+          ],
+          [
+            0,
+            15517,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000
+    },
+    "Hyst_OFF_Inner_ON": {
+      "mode": "Hyst_OFF_Inner_ON",
+      "hysteresis": false,
+      "inner_core": true,
+      "accuracy": 99.73,
+      "macro_precision": 60.83,
+      "macro_recall": 74.28,
+      "macro_f1": 64.95,
+      "macro_f1_3class": 86.6,
+      "weighted_f1_3class": 99.78,
+      "flickering_rate": 0.3526,
+      "flickering_transitions": 67,
+      "total_transitions": 0,
+      "stability_score": 99.7263,
+      "per_class": {
+        "available": {
+          "precision": 100.0,
+          "recall": 99.91,
+          "f1": 99.96,
+          "support": 3443,
+          "tp": 3440,
+          "fp": 0,
+          "fn": 3
+        },
+        "occupied": {
+          "precision": 99.99,
+          "recall": 99.69,
+          "f1": 99.84,
+          "support": 15517,
+          "tp": 15469,
+          "fp": 1,
+          "fn": 48
+        },
+        "overlapping": {
+          "precision": 43.33,
+          "recall": 97.5,
+          "f1": 60.0,
+          "support": 40,
+          "tp": 39,
+          "fp": 51,
+          "fn": 1
+        },
+        "outside": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "outside_metrics": {
+        "precision": 86.39,
+        "recall": 88.15,
+        "f1": 87.27,
+        "tp": 1905,
+        "fp": 300,
+        "fn": 256,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping",
+          "outside"
+        ],
+        "matrix": [
+          [
+            3440,
+            0,
+            3,
+            0
+          ],
+          [
+            0,
+            15469,
+            48,
+            0
+          ],
+          [
+            0,
+            1,
+            39,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000
+    },
+    "Hyst_ON_Inner_OFF": {
+      "mode": "Hyst_ON_Inner_OFF",
+      "hysteresis": true,
+      "inner_core": false,
+      "accuracy": 99.67,
+      "macro_precision": 49.78,
+      "macro_recall": 49.92,
+      "macro_f1": 49.84,
+      "macro_f1_3class": 66.46,
+      "weighted_f1_3class": 99.57,
+      "flickering_rate": 0.1737,
+      "flickering_transitions": 33,
+      "total_transitions": 35,
+      "stability_score": 99.6737,
+      "per_class": {
+        "available": {
+          "precision": 99.36,
+          "recall": 99.74,
+          "f1": 99.55,
+          "support": 3443,
+          "tp": 3434,
+          "fp": 22,
+          "fn": 9
+        },
+        "occupied": {
+          "precision": 99.74,
+          "recall": 99.92,
+          "f1": 99.83,
+          "support": 15517,
+          "tp": 15504,
+          "fp": 40,
+          "fn": 13
+        },
+        "overlapping": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 40,
+          "tp": 0,
+          "fp": 0,
+          "fn": 40
+        },
+        "outside": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "outside_metrics": {
+        "precision": 86.39,
+        "recall": 88.15,
+        "f1": 87.27,
+        "tp": 1905,
+        "fp": 300,
+        "fn": 256,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping",
+          "outside"
+        ],
+        "matrix": [
+          [
+            3434,
+            9,
+            0,
+            0
+          ],
+          [
+            13,
+            15504,
+            0,
+            0
+          ],
+          [
+            9,
+            31,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000
+    },
+    "Hyst_ON_Inner_ON": {
+      "mode": "Hyst_ON_Inner_ON",
+      "hysteresis": true,
+      "inner_core": true,
+      "accuracy": 99.71,
+      "macro_precision": 60.8,
+      "macro_recall": 74.28,
+      "macro_f1": 64.94,
+      "macro_f1_3class": 86.58,
+      "weighted_f1_3class": 99.76,
+      "flickering_rate": 0.3,
+      "flickering_transitions": 57,
+      "total_transitions": 99,
+      "stability_score": 99.7053,
+      "per_class": {
+        "available": {
+          "precision": 99.88,
+          "recall": 99.94,
+          "f1": 99.91,
+          "support": 3443,
+          "tp": 3441,
+          "fp": 4,
+          "fn": 2
+        },
+        "occupied": {
+          "precision": 99.99,
+          "recall": 99.66,
+          "f1": 99.83,
+          "support": 15517,
+          "tp": 15464,
+          "fp": 1,
+          "fn": 53
+        },
+        "overlapping": {
+          "precision": 43.33,
+          "recall": 97.5,
+          "f1": 60.0,
+          "support": 40,
+          "tp": 39,
+          "fp": 51,
+          "fn": 1
+        },
+        "outside": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        }
+      },
+      "outside_metrics": {
+        "precision": 86.39,
+        "recall": 88.15,
+        "f1": 87.27,
+        "tp": 1905,
+        "fp": 300,
+        "fn": 256,
+        "support": 2161
+      },
+      "confusion_matrix": {
+        "classes": [
+          "available",
+          "occupied",
+          "overlapping",
+          "outside"
+        ],
+        "matrix": [
+          [
+            3441,
+            0,
+            2,
+            0
+          ],
+          [
+            4,
+            15464,
+            49,
+            0
+          ],
+          [
+            0,
+            1,
+            39,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "frames_evaluated": 1000
+    }
+  }
+}

@@ -1,0 +1,3 @@
+mode,gt_transitions,pred_transitions,matched_transitions,match_pct,min_frames,max_frames,mean_frames,median_frames,std_frames,p95_frames,p99_frames,mean_sec,median_sec,below_threshold_pct
+,49,33,31,63.27,0,16658,769.74,17.0,3093.59,3176,13495,25.658,0.567,61.29
+,49,57,47,95.92,0,6117,144.7,0.0,881.75,159,3411,4.823,0.0,87.23

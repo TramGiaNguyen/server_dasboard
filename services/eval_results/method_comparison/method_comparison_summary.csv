@@ -1,0 +1,5 @@
+method,accuracy,macro_f1_3class,weighted_f1_3class,flickering_rate,total_transitions,frames_evaluated,available_f1,occupied_f1,overlapping_f1,outside_f1,outside_precision,outside_recall
+Rectangular ROI,18.12,10.23,5.56,0.0,0,1000,30.68,0.0,0.0,0.0,0.0,0.0
+Polygon Only,18.12,10.23,5.56,0.0,0,1000,30.68,0.0,0.0,0.0,0.0,0.0
+Polygon + Inner-Core,18.12,10.23,5.56,0.0,0,1000,30.68,0.0,0.0,0.0,0.0,0.0
+Proposed Framework,18.12,10.23,5.56,0.0,6,1000,30.68,0.0,0.0,0.0,0.0,0.0

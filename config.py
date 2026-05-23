@@ -11,6 +11,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Model paths
 MODEL_PATH = os.path.join(BASE_DIR, 'static', 'models', 'yolov8l.pt')
 
+# Gate camera model — separate, smaller model for faster line-crossing detection.
+# Falls back to bare filename so Ultralytics auto-downloads on first run if the
+# file is not already present in static/models/.
+_gate_model_file = os.getenv('GATE_MODEL_FILE', 'yolov8s.pt')
+_gate_model_local = os.path.join(BASE_DIR, 'static', 'models', _gate_model_file)
+GATE_MODEL_PATH = _gate_model_local if os.path.exists(_gate_model_local) else _gate_model_file
+
 # Video paths — use .env for RTSP URLs in production
 # Local video files (offline demo/testing)
 PARKING_VIDEO_URL = os.getenv('PARKING_RTSP_URL', '/static/video/CAM_PARKING.mp4')
@@ -36,6 +43,25 @@ GATE_LINE_1_Y = int(os.getenv('GATE_LINE_1_Y', '80'))
 GATE_LINE_2_Y = int(os.getenv('GATE_LINE_2_Y', '360'))
 GATE_LINE_3_Y = int(os.getenv('GATE_LINE_3_Y', '220'))
 GATE_LINE_THICKNESS = 2
+
+# Gate inference + tracking knobs (Phase A/B/C overhaul).
+GATE_USE_HALF_PRECISION = os.getenv('GATE_USE_HALF_PRECISION', 'True').lower() == 'true'
+GATE_DETECT_CONF = float(os.getenv('GATE_DETECT_CONF', '0.25'))
+GATE_DETECT_IOU = float(os.getenv('GATE_DETECT_IOU', '0.45'))
+GATE_DETECT_IMGSZ = int(os.getenv('GATE_DETECT_IMGSZ', '640'))
+_gate_tracker_cfg = os.getenv('GATE_TRACKER_CONFIG', 'cfg/trackers/bytetrack_gate.yaml')
+GATE_TRACKER_CONFIG = (
+    _gate_tracker_cfg
+    if os.path.isabs(_gate_tracker_cfg)
+    else os.path.join(BASE_DIR, _gate_tracker_cfg)
+)
+GATE_RTSP_BUFFER = int(os.getenv('GATE_RTSP_BUFFER', '1'))
+GATE_OCR_WORKERS = int(os.getenv('GATE_OCR_WORKERS', '2'))
+GATE_DEBUG_NDJSON_LOG = os.getenv('GATE_DEBUG_NDJSON_LOG', 'False').lower() == 'true'
+GATE_OCR_DEBOUNCE_CONF = float(os.getenv('GATE_OCR_DEBOUNCE_CONF', '0.85'))
+GATE_OCR_DEBOUNCE_FRAMES = int(os.getenv('GATE_OCR_DEBOUNCE_FRAMES', '10'))
+GATE_LAG_DRAIN_MULTIPLIER = float(os.getenv('GATE_LAG_DRAIN_MULTIPLIER', '2.0'))
+GATE_TARGET_FPS = float(os.getenv('GATE_TARGET_FPS', '30'))
 
 # Ensure LINE_3 is between LINE_1 and LINE_2.
 # Some parts of the gate pipeline assume this ordering for stable direction/zone logic.

@@ -1,0 +1,342 @@
+{
+  "Hyst_OFF_Inner_ON": {
+    "mode": "Hyst_OFF_Inner_ON",
+    "hysteresis": false,
+    "inner_core": true,
+    "accuracy": 99.73,
+    "macro_precision": 60.99,
+    "macro_recall": 74.9,
+    "macro_f1": 65.22,
+    "flickering_rate": 0.3372,
+    "flickering_transitions": 64,
+    "stability_score": 99.7313,
+    "per_class": {
+      "available": {
+        "precision": 100.0,
+        "recall": 99.94,
+        "f1": 99.97,
+        "support": 3430,
+        "tp": 3428,
+        "fp": 0,
+        "fn": 2
+      },
+      "occupied": {
+        "precision": 100.0,
+        "recall": 99.68,
+        "f1": 99.84,
+        "support": 15511,
+        "tp": 15462,
+        "fp": 0,
+        "fn": 49
+      },
+      "overlapping": {
+        "precision": 43.96,
+        "recall": 100.0,
+        "f1": 61.07,
+        "support": 40,
+        "tp": 40,
+        "fp": 51,
+        "fn": 0
+      },
+      "outside": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "confusion_matrix": {
+      "classes": [
+        "available",
+        "occupied",
+        "overlapping",
+        "outside"
+      ],
+      "matrix": [
+        [
+          3428,
+          0,
+          2,
+          0
+        ],
+        [
+          0,
+          15462,
+          49,
+          0
+        ],
+        [
+          0,
+          0,
+          40,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "frames_evaluated": 999
+  },
+  "Hyst_OFF_Inner_OFF": {
+    "mode": "Hyst_OFF_Inner_OFF",
+    "hysteresis": false,
+    "inner_core": false,
+    "accuracy": 99.78,
+    "macro_precision": 49.93,
+    "macro_recall": 49.98,
+    "macro_f1": 49.96,
+    "flickering_rate": 0.1844,
+    "flickering_transitions": 35,
+    "stability_score": 99.7787,
+    "per_class": {
+      "available": {
+        "precision": 100.0,
+        "recall": 99.94,
+        "f1": 99.97,
+        "support": 3430,
+        "tp": 3428,
+        "fp": 0,
+        "fn": 2
+      },
+      "occupied": {
+        "precision": 99.73,
+        "recall": 100.0,
+        "f1": 99.86,
+        "support": 15511,
+        "tp": 15511,
+        "fp": 42,
+        "fn": 0
+      },
+      "overlapping": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 40,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40
+      },
+      "outside": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "confusion_matrix": {
+      "classes": [
+        "available",
+        "occupied",
+        "overlapping",
+        "outside"
+      ],
+      "matrix": [
+        [
+          3428,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          15511,
+          0,
+          0
+        ],
+        [
+          0,
+          40,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "frames_evaluated": 999
+  },
+  "Hyst_ON_Inner_ON": {
+    "mode": "Hyst_ON_Inner_ON",
+    "hysteresis": true,
+    "inner_core": true,
+    "accuracy": 48.12,
+    "macro_precision": 30.72,
+    "macro_recall": 33.37,
+    "macro_f1": 23.6,
+    "flickering_rate": 0.0,
+    "flickering_transitions": 0,
+    "stability_score": 48.1218,
+    "per_class": {
+      "available": {
+        "precision": 25.29,
+        "recall": 95.77,
+        "f1": 40.02,
+        "support": 3430,
+        "tp": 3285,
+        "fp": 9702,
+        "fn": 145
+      },
+      "occupied": {
+        "precision": 97.58,
+        "recall": 37.71,
+        "f1": 54.4,
+        "support": 15511,
+        "tp": 5849,
+        "fp": 145,
+        "fn": 9662
+      },
+      "overlapping": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 40,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40
+      },
+      "outside": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "confusion_matrix": {
+      "classes": [
+        "available",
+        "occupied",
+        "overlapping",
+        "outside"
+      ],
+      "matrix": [
+        [
+          3285,
+          145,
+          0,
+          0
+        ],
+        [
+          9662,
+          5849,
+          0,
+          0
+        ],
+        [
+          40,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "frames_evaluated": 999
+  },
+  "Hyst_ON_Inner_OFF": {
+    "mode": "Hyst_ON_Inner_OFF",
+    "hysteresis": true,
+    "inner_core": false,
+    "accuracy": 48.12,
+    "macro_precision": 30.72,
+    "macro_recall": 33.37,
+    "macro_f1": 23.6,
+    "flickering_rate": 0.0,
+    "flickering_transitions": 0,
+    "stability_score": 48.1218,
+    "per_class": {
+      "available": {
+        "precision": 25.29,
+        "recall": 95.77,
+        "f1": 40.02,
+        "support": 3430,
+        "tp": 3285,
+        "fp": 9702,
+        "fn": 145
+      },
+      "occupied": {
+        "precision": 97.58,
+        "recall": 37.71,
+        "f1": 54.4,
+        "support": 15511,
+        "tp": 5849,
+        "fp": 145,
+        "fn": 9662
+      },
+      "overlapping": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 40,
+        "tp": 0,
+        "fp": 0,
+        "fn": 40
+      },
+      "outside": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "confusion_matrix": {
+      "classes": [
+        "available",
+        "occupied",
+        "overlapping",
+        "outside"
+      ],
+      "matrix": [
+        [
+          3285,
+          145,
+          0,
+          0
+        ],
+        [
+          9662,
+          5849,
+          0,
+          0
+        ],
+        [
+          40,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "frames_evaluated": 999
+  }
+}

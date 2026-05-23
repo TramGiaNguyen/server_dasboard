@@ -1,0 +1,5 @@
+mode,accuracy,macro_precision,macro_recall,macro_f1,flickering_rate,total_transitions,frames_evaluated
+Hyst_OFF_Inner_OFF,34.52,28.7,28.81,17.28,1.4316,0,1000
+Hyst_OFF_Inner_ON,17.49,22.19,23.59,8.85,1.6105,0,1000
+Hyst_ON_Inner_OFF,34.25,28.93,28.93,17.14,0.4316,116,1000
+Hyst_ON_Inner_ON,17.51,22.0,23.82,8.77,0.4632,122,1000

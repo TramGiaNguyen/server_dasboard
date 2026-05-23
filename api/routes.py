@@ -1130,3 +1130,43 @@ def register_routes(app, socketio):
             'gate_pipeline_fps': gate_fps,
             'timestamp': datetime.now().isoformat(),
         })
+
+    @app.route('/api/health/gate')
+    def get_gate_health():
+        """
+        Live performance snapshot for the gate camera pipeline.
+
+        Use this to verify the overhaul: FPS should sit near GATE_TARGET_FPS,
+        avg_loop_ms well under 33ms, OCR avg latency under ~200ms, and
+        frames_dropped + lag_recovery_events should not climb continuously.
+        """
+        from shared.pipeline_metrics import get_registered
+        import shared.state as _shared_state
+        from shared.state import (
+            plate_fifo_queue as _pfq,
+            parking_trigger_queue as _ptq,
+            gate_ocr_scheduler_depth as _osd,
+            gate_render_queue as _grq,
+            gate_db_pending_records as _gpend,
+        )
+
+        metrics = get_registered('gate_pipeline')
+        snap = metrics.get_snapshot() if metrics else None
+
+        _q_pend, _q_latest = _osd()
+
+        return jsonify({
+            'pipeline': snap,
+            'queues': {
+                'plate_fifo': len(_pfq),
+                'parking_trigger': len(_ptq),
+                'ocr_pending': _q_pend,
+                'ocr_latest_jobs': _q_latest,
+                'gate_render': _grq.qsize(),
+                'gate_db_pending': len(_gpend),
+            },
+            'last_ocr_plate': _shared_state.gate_ocr_results.get('latest_plate'),
+            'last_ocr_confidence': _shared_state.gate_ocr_results.get('latest_plate_confidence'),
+            'last_ocr_detection_ts': _shared_state.gate_ocr_results.get('last_detection_time'),
+            'timestamp': datetime.now().isoformat(),
+        })

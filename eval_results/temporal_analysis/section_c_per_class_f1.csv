@@ -1,0 +1,5 @@
+mode,available,occupied,overlapping,outside
+Hyst_OFF_Inner_OFF,99.96,99.86,0.0,0.0
+Hyst_OFF_Inner_ON,99.96,99.84,60.0,0.0
+Hyst_ON_Inner_OFF,99.55,99.83,0.0,0.0
+Hyst_ON_Inner_ON,99.91,99.83,60.0,0.0

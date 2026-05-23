@@ -1,0 +1,860 @@
+{
+  "scanned_frames": 1379,
+  "total_video_frames": 41363,
+  "overall_distribution": {
+    "available": 4871,
+    "occupied": 21198,
+    "overlapping": 132
+  },
+  "top_diverse_frames": [
+    {
+      "frame": 1050,
+      "timestamp_s": 35.0,
+      "available": 12,
+      "occupied": 6,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.95,
+      "state_dist": {
+        "overlapping": 1,
+        "available": 12,
+        "occupied": 6
+      }
+    },
+    {
+      "frame": 1260,
+      "timestamp_s": 42.0,
+      "available": 12,
+      "occupied": 6,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.95,
+      "state_dist": {
+        "available": 12,
+        "occupied": 6,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 2550,
+      "timestamp_s": 85.0,
+      "available": 11,
+      "occupied": 7,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.94,
+      "state_dist": {
+        "available": 11,
+        "overlapping": 1,
+        "occupied": 7
+      }
+    },
+    {
+      "frame": 2580,
+      "timestamp_s": 86.0,
+      "available": 11,
+      "occupied": 7,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.94,
+      "state_dist": {
+        "available": 11,
+        "overlapping": 1,
+        "occupied": 7
+      }
+    },
+    {
+      "frame": 2820,
+      "timestamp_s": 94.0,
+      "available": 11,
+      "occupied": 7,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.94,
+      "state_dist": {
+        "available": 11,
+        "overlapping": 1,
+        "occupied": 7
+      }
+    },
+    {
+      "frame": 2850,
+      "timestamp_s": 95.0,
+      "available": 11,
+      "occupied": 7,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.94,
+      "state_dist": {
+        "available": 11,
+        "overlapping": 1,
+        "occupied": 7
+      }
+    },
+    {
+      "frame": 2880,
+      "timestamp_s": 96.0,
+      "available": 11,
+      "occupied": 7,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.94,
+      "state_dist": {
+        "available": 11,
+        "overlapping": 1,
+        "occupied": 7
+      }
+    },
+    {
+      "frame": 9420,
+      "timestamp_s": 314.0,
+      "available": 6,
+      "occupied": 11,
+      "overlapping": 2,
+      "total_detected": 19,
+      "score": 3.91,
+      "state_dist": {
+        "occupied": 11,
+        "overlapping": 2,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9510,
+      "timestamp_s": 317.0,
+      "available": 6,
+      "occupied": 11,
+      "overlapping": 2,
+      "total_detected": 19,
+      "score": 3.91,
+      "state_dist": {
+        "occupied": 11,
+        "overlapping": 2,
+        "available": 6
+      }
+    },
+    {
+      "frame": 4920,
+      "timestamp_s": 164.0,
+      "available": 9,
+      "occupied": 9,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.8,
+      "state_dist": {
+        "available": 9,
+        "occupied": 9,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 5070,
+      "timestamp_s": 169.0,
+      "available": 9,
+      "occupied": 9,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.8,
+      "state_dist": {
+        "available": 9,
+        "occupied": 9,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 5100,
+      "timestamp_s": 170.0,
+      "available": 9,
+      "occupied": 9,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.8,
+      "state_dist": {
+        "available": 9,
+        "occupied": 9,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 7050,
+      "timestamp_s": 235.0,
+      "available": 8,
+      "occupied": 10,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.68,
+      "state_dist": {
+        "overlapping": 1,
+        "occupied": 10,
+        "available": 8
+      }
+    },
+    {
+      "frame": 7740,
+      "timestamp_s": 258.0,
+      "available": 7,
+      "occupied": 11,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.52,
+      "state_dist": {
+        "occupied": 11,
+        "available": 7,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 7770,
+      "timestamp_s": 259.0,
+      "available": 7,
+      "occupied": 11,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.52,
+      "state_dist": {
+        "occupied": 11,
+        "overlapping": 1,
+        "available": 7
+      }
+    },
+    {
+      "frame": 7860,
+      "timestamp_s": 262.0,
+      "available": 7,
+      "occupied": 11,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.52,
+      "state_dist": {
+        "occupied": 11,
+        "available": 7,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 7980,
+      "timestamp_s": 266.0,
+      "available": 7,
+      "occupied": 11,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.52,
+      "state_dist": {
+        "occupied": 11,
+        "available": 7,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 8010,
+      "timestamp_s": 267.0,
+      "available": 7,
+      "occupied": 11,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.52,
+      "state_dist": {
+        "occupied": 11,
+        "available": 7,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 9120,
+      "timestamp_s": 304.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9150,
+      "timestamp_s": 305.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9180,
+      "timestamp_s": 306.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9210,
+      "timestamp_s": 307.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9240,
+      "timestamp_s": 308.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9270,
+      "timestamp_s": 309.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9300,
+      "timestamp_s": 310.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9330,
+      "timestamp_s": 311.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9360,
+      "timestamp_s": 312.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9390,
+      "timestamp_s": 313.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9450,
+      "timestamp_s": 315.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9480,
+      "timestamp_s": 316.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9540,
+      "timestamp_s": 318.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9570,
+      "timestamp_s": 319.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9690,
+      "timestamp_s": 323.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9720,
+      "timestamp_s": 324.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "overlapping": 1,
+        "available": 6
+      }
+    },
+    {
+      "frame": 9900,
+      "timestamp_s": 330.0,
+      "available": 6,
+      "occupied": 12,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.32,
+      "state_dist": {
+        "occupied": 12,
+        "available": 6,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 10170,
+      "timestamp_s": 339.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10200,
+      "timestamp_s": 340.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10230,
+      "timestamp_s": 341.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10260,
+      "timestamp_s": 342.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10290,
+      "timestamp_s": 343.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10320,
+      "timestamp_s": 344.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 10350,
+      "timestamp_s": 345.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "overlapping": 1,
+        "available": 5
+      }
+    },
+    {
+      "frame": 12510,
+      "timestamp_s": 417.0,
+      "available": 5,
+      "occupied": 13,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 3.09,
+      "state_dist": {
+        "occupied": 13,
+        "available": 5,
+        "overlapping": 1
+      }
+    },
+    {
+      "frame": 13590,
+      "timestamp_s": 453.0,
+      "available": 4,
+      "occupied": 14,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 2.81,
+      "state_dist": {
+        "occupied": 14,
+        "overlapping": 1,
+        "available": 4
+      }
+    },
+    {
+      "frame": 13620,
+      "timestamp_s": 454.0,
+      "available": 4,
+      "occupied": 14,
+      "overlapping": 1,
+      "total_detected": 19,
+      "score": 2.81,
+      "state_dist": {
+        "occupied": 14,
+        "overlapping": 1,
+        "available": 4
+      }
+    },
+    {
+      "frame": 0,
+      "timestamp_s": 0.0,
+      "available": 13,
+      "occupied": 6,
+      "overlapping": 0,
+      "total_detected": 19,
+      "score": 2.62,
+      "state_dist": {
+        "available": 13,
+        "occupied": 6
+      }
+    },
+    {
+      "frame": 30,
+      "timestamp_s": 1.0,
+      "available": 13,
+      "occupied": 6,
+      "overlapping": 0,
+      "total_detected": 19,
+      "score": 2.62,
+      "state_dist": {
+        "available": 13,
+        "occupied": 6
+      }
+    },
+    {
+      "frame": 60,
+      "timestamp_s": 2.0,
+      "available": 13,
+      "occupied": 6,
+      "overlapping": 0,
+      "total_detected": 19,
+      "score": 2.62,
+      "state_dist": {
+        "available": 13,
+        "occupied": 6
+      }
+    },
+    {
+      "frame": 90,
+      "timestamp_s": 3.0,
+      "available": 13,
+      "occupied": 6,
+      "overlapping": 0,
+      "total_detected": 19,
+      "score": 2.62,
+      "state_dist": {
+        "available": 13,
+        "occupied": 6
+      }
+    },
+    {
+      "frame": 120,
+      "timestamp_s": 4.0,
+      "available": 13,
+      "occupied": 6,
+      "overlapping": 0,
+      "total_detected": 19,
+      "score": 2.62,
+      "state_dist": {
+        "available": 13,
+        "occupied": 6
+      }
+    }
+  ],
+  "suggested_frames": [
+    0,
+    30,
+    60,
+    4920,
+    4950,
+    4980,
+    5700,
+    7050,
+    7080,
+    7740,
+    7770,
+    7800,
+    9120,
+    9150,
+    9180,
+    10170,
+    10200,
+    10230,
+    13590,
+    13620,
+    13650,
+    14280,
+    14310,
+    14340,
+    15960,
+    15990,
+    16020,
+    18150,
+    18180,
+    18210
+  ],
+  "many_empty_frames": [
+    {
+      "frame": 0,
+      "timestamp_s": 0.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 30,
+      "timestamp_s": 1.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 60,
+      "timestamp_s": 2.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 90,
+      "timestamp_s": 3.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 120,
+      "timestamp_s": 4.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 150,
+      "timestamp_s": 5.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 180,
+      "timestamp_s": 6.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 210,
+      "timestamp_s": 7.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 240,
+      "timestamp_s": 8.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 270,
+      "timestamp_s": 9.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 300,
+      "timestamp_s": 10.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 330,
+      "timestamp_s": 11.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 360,
+      "timestamp_s": 12.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 390,
+      "timestamp_s": 13.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 420,
+      "timestamp_s": 14.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 450,
+      "timestamp_s": 15.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 480,
+      "timestamp_s": 16.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 510,
+      "timestamp_s": 17.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 540,
+      "timestamp_s": 18.0,
+      "available": 13,
+      "occupied": 6
+    },
+    {
+      "frame": 570,
+      "timestamp_s": 19.0,
+      "available": 13,
+      "occupied": 6
+    }
+  ]
+}

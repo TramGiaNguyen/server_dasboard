@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Bảng Quản Lý - BDU Smart Parking</title>
+    <title>Manager Dashboard - BDU Smart Parking</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -331,14 +331,14 @@
         <!-- Top Metrics Row -->
         <div class="grid grid-cols-5 gap-3 shrink-0">
             <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
-                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Tổng Chỗ</p>
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Total Slots</p>
                 <div class="flex items-end justify-between mt-0.5">
                     <p class="text-2xl font-bold" id="kpi-total">—</p>
                     <span class="material-symbols-outlined text-primary/40 text-3xl">grid_view</span>
                 </div>
             </div>
             <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
-                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Trống</p>
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Empty</p>
                 <div class="flex items-end justify-between mt-0.5">
                     <p class="text-2xl font-bold text-emerald-400" id="kpi-available">—</p>
                     <span class="material-symbols-outlined text-emerald-400/40 text-3xl">check_circle</span>
@@ -346,21 +346,21 @@
             </div>
             <div
                 class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between border-b-2 border-b-primary">
-                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đã Đỗ</p>
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Occupied</p>
                 <div class="flex items-end justify-between mt-0.5">
                     <p class="text-2xl font-bold text-primary" id="kpi-occupied">—</p>
                     <span class="material-symbols-outlined text-primary/40 text-3xl">directions_car</span>
                 </div>
             </div>
             <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
-                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đỗ Sai Vị Trí</p>
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Out of Slot</p>
                 <div class="flex items-end justify-between mt-0.5">
                     <p class="text-2xl font-bold text-amber-500" id="kpi-overlapping">—</p>
                     <span class="material-symbols-outlined text-amber-500/40 text-3xl">warning</span>
                 </div>
             </div>
             <div class="bg-slate-800/40 border border-slate-700/50 p-3 rounded-xl flex flex-col justify-between">
-                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Đỗ Bên Ngoài</p>
+                <p class="text-slate-400 text-[10px] font-medium uppercase tracking-wider">Outside</p>
                 <div class="flex items-end justify-between mt-0.5">
                     <p class="text-2xl font-bold text-rose-500" id="kpi-outside">—</p>
                     <span class="material-symbols-outlined text-rose-500/40 text-3xl">error</span>
@@ -374,7 +374,7 @@
                 <div class="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 min-h-0 overflow-hidden">
                     <h3 class="text-xs font-bold mb-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-base">donut_large</span>
-                        Tỷ Lệ Lấp Đầy (<span id="occupancyPctTitle">—</span>%)
+                        Occupancy Rate (<span id="occupancyPctTitle">—</span>%)
                     </h3>
                     <div class="relative flex items-center justify-center flex-1 min-h-0">
                         <svg class="w-28 h-28 transform -rotate-90" viewBox="0 0 36 36">
@@ -385,34 +385,34 @@
                         </svg>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span class="text-3xl font-bold" id="occupancyPct">—%</span>
-                            <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Công suất bãi</span>
+                            <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Lot Capacity</span>
                         </div>
                     </div>
                 </div>
                 <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-yellow-500 text-base">star</span>
-                        <span class="text-xs font-bold">Quản Lý Slot VIP</span>
+                        <span class="text-xs font-bold">VIP Slot Manager</span>
                     </div>
                     <button onclick="toggleVipModal()" class="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-yellow-400 text-[10px] font-bold uppercase transition-colors flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">settings</span>
-                        Cấu Hình
+                        Configuration
                     </button>
                 </div>
                 <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-purple-500 text-base">group</span>
-                        <span class="text-xs font-bold">Quản Lý Người Dùng</span>
+                        <span class="text-xs font-bold">User Manager</span>
                     </div>
                     <button onclick="toggleUserModal()" class="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 rounded-lg text-purple-400 text-[10px] font-bold uppercase transition-colors flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">settings</span>
-                        Cấu Hình
+                        Configuration
                     </button>
                 </div>
                 <div class="flex-1 bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 flex flex-col overflow-hidden min-h-0">
                     <h3 class="text-xs font-bold mb-1 flex items-center gap-2 shrink-0">
                         <span class="material-symbols-outlined text-primary text-base">bar_chart</span>
-                        Lưu Lượng Theo Giờ
+                        Hourly Traffic
                     </h3>
                     <div class="flex-1 min-h-0">
                         <canvas id="hourlyTrafficChart"></canvas>
@@ -425,28 +425,28 @@
                 <div class="flex items-center justify-between mb-2 shrink-0 flex-wrap gap-2">
                     <h3 class="text-sm font-bold flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-lg">view_comfy</span>
-                        Trạng Thái Slot Đậu Xe (Live)
+                        Parking Slot Status (Live)
                     </h3>
                     <div class="flex gap-4 flex-wrap">
                         <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
-                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div> Trống
+                            <div class="w-3 h-3 rounded-full bg-emerald-500"></div> Empty
                         </div>
                         <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
-                            <div class="w-3 h-3 rounded-full bg-blue-500"></div> Đã đặt
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div> Reserved
                         </div>
                         <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
                             <div class="w-3 h-3 rounded-full bg-yellow-500"></div> VIP
                         </div>
                         <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
-                            <div class="w-3 h-3 rounded-full bg-primary"></div> Đã Đỗ
+                            <div class="w-3 h-3 rounded-full bg-primary"></div> Occupied
                         </div>
                         <div class="flex items-center gap-1.5 text-[10px] font-medium uppercase text-slate-400">
-                            <div class="w-3 h-3 rounded-full bg-rose-500"></div> Bị chiếm
+                            <div class="w-3 h-3 rounded-full bg-rose-500"></div> Hijacked
                         </div>
                     </div>
                 </div>
                 <div class="flex-1 overflow-auto" id="slotGrid">
-                    <div class="text-center text-slate-400 text-sm py-8">Đang tải...</div>
+                    <div class="text-center text-slate-400 text-sm py-8">Loading...</div>
                 </div>
             </div>
         </div>
@@ -457,7 +457,7 @@
                 <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
                     <span class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-lg">history</span>
-                        Lịch Sử Ra / Vào Cổng
+                        Entry / Exit Gate Log
                     </span>
                     <a href="/api/export/gate-logs.csv" class="text-[10px] text-primary hover:underline uppercase font-bold flex items-center gap-1">
                         <span class="material-symbols-outlined text-xs">download</span>CSV
@@ -467,14 +467,14 @@
                     <table class="w-full text-xs">
                         <thead class="sticky top-0 bg-slate-800 text-slate-400 text-[10px] uppercase font-bold z-10">
                             <tr>
-                                <th class="text-left pb-2 font-semibold">Biển Số</th>
-                                <th class="text-left pb-2 font-semibold">Thời Gian</th>
-                                <th class="text-left pb-2 font-semibold">Loại</th>
-                                <th class="text-right pb-2 font-semibold">Ảnh</th>
+                                <th class="text-left pb-2 font-semibold">Plate</th>
+                                <th class="text-left pb-2 font-semibold">Time</th>
+                                <th class="text-left pb-2 font-semibold">Type</th>
+                                <th class="text-right pb-2 font-semibold">Image</th>
                             </tr>
                         </thead>
                         <tbody id="gateLogsBody" class="divide-y divide-slate-700/50">
-                            <tr><td colspan="4" class="py-4 text-center text-slate-400">Đang tải...</td></tr>
+                            <tr><td colspan="4" class="py-4 text-center text-slate-400">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -484,7 +484,7 @@
                 <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
                     <span class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-amber-500 text-lg">error_outline</span>
-                        Lịch Sử Đậu Sai Vị Trí
+                        Improper Parking Log
                     </span>
                     <a href="/api/export/improper-parking-logs.csv" class="text-[10px] text-amber-500 hover:underline uppercase font-bold flex items-center gap-1">
                         <span class="material-symbols-outlined text-xs">download</span>CSV
@@ -495,30 +495,30 @@
                         <table class="w-full text-[11px]">
                             <thead class="sticky top-0 bg-slate-800 text-slate-400 text-[9px] uppercase font-bold z-10">
                                 <tr>
-                                    <th class="text-left pb-2 font-semibold">Vị Trí</th>
-                                    <th class="text-left pb-2 font-semibold">Biển Số</th>
-                                    <th class="text-right pb-2 font-semibold pr-2">TG Vi Phạm</th>
-                                    <th class="text-right pb-2 font-semibold pr-1 rounded-r">Ảnh</th>
+                                    <th class="text-left pb-2 font-semibold">Slot</th>
+                                    <th class="text-left pb-2 font-semibold">Plate</th>
+                                    <th class="text-right pb-2 font-semibold pr-2">Violation Time</th>
+                                    <th class="text-right pb-2 font-semibold pr-1 rounded-r">Image</th>
                                 </tr>
                             </thead>
                             <tbody id="improperLogsBody" class="divide-y divide-slate-700/50">
-                                <tr><td colspan="4" class="py-4 text-center text-slate-400">Đang tải...</td></tr>
+                                <tr><td colspan="4" class="py-4 text-center text-slate-400">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="flex flex-col gap-2 overflow-hidden">
                         <div class="flex-1 min-h-0 overflow-y-auto">
-                            <p class="text-[10px] text-slate-400 uppercase font-bold mb-2 sticky top-0 bg-slate-800/90 pb-1">Slot Hay Sử Dụng</p>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold mb-2 sticky top-0 bg-slate-800/90 pb-1">Frequently Used Slots</p>
                             <div id="slotFreqBars" class="space-y-2">
-                                <span class="text-slate-400 text-xs">Đang tải...</span>
+                                <span class="text-slate-400 text-xs">Loading...</span>
                             </div>
                         </div>
                         <div class="bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg shrink-0">
                             <p class="text-[9px] text-rose-400 uppercase font-bold mb-1 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[12px]">schedule</span>
-                                Khung Giờ Cao Điểm (&lt;3 Slots)
+                                Peak Hours (&lt;3 Slots)
                             </p>
-                            <p class="text-sm font-bold text-rose-200" id="peakHourText">Đang tải...</p>
+                            <p class="text-sm font-bold text-rose-200" id="peakHourText">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -528,14 +528,14 @@
                 <h3 class="text-xs font-bold mb-2 flex items-center justify-between shrink-0">
                     <span class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-rose-500 text-lg">gavel</span>
-                        Xe Thường Xuyên Vi Phạm (&gt;5)
+                        Frequently Violating Vehicles (&gt;5)
                     </span>
                     <a href="/api/export/frequent-violators.csv" class="text-[10px] text-rose-400 hover:underline uppercase font-bold flex items-center gap-1">
                         <span class="material-symbols-outlined text-xs">download</span>CSV
                     </a>
                 </h3>
                 <div class="space-y-2 overflow-y-auto flex-1 pr-1" id="violatorsBody">
-                    <div class="text-center text-slate-400 text-sm py-4">Đang tải...</div>
+                    <div class="text-center text-slate-400 text-sm py-4">Loading...</div>
                 </div>
             </div>
         </div>
@@ -550,13 +550,13 @@
         <div class="vip-modal-header">
             <div class="vip-modal-title">
                 <span class="material-symbols-outlined text-yellow-500">star</span>
-                Quản Lý Slot Dành Cho VIP
+                VIP Slot Manager
             </div>
             <button onclick="toggleVipModal()" class="vip-modal-close">
                 <span class="material-symbols-outlined text-lg">close</span>
             </button>
         </div>
-        <p class="text-sm text-slate-400 mb-4">Chọn các slot VIP (không cho phép người dùng thường đặt chỗ)</p>
+        <p class="text-sm text-slate-400 mb-4">Select VIP slots (regular users cannot make reservations)</p>
         <div id="vipSlotsCheckboxes" class="grid grid-cols-5 gap-3">
             <!-- Filled by JS -->
         </div>
@@ -569,7 +569,7 @@
         <div class="user-modal-header">
             <div class="user-modal-title">
                 <span class="material-symbols-outlined text-purple-500">group</span>
-                <span id="userModalTitle">Quản Lý Người Dùng</span>
+                <span id="userModalTitle">User Manager</span>
             </div>
             <button onclick="closeUserModal()" class="user-modal-close">
                 <span class="material-symbols-outlined text-lg">close</span>
@@ -580,14 +580,14 @@
             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <div class="flex gap-2 flex-wrap">
                     <button onclick="openAddUserForm()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
-                        <span class="material-symbols-outlined text-sm">person_add</span> Thêm người dùng
+                        <span class="material-symbols-outlined text-sm">person_add</span> Add User
                     </button>
                     <button onclick="document.getElementById('csvFileInput').click()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
                         <span class="material-symbols-outlined text-sm">upload</span> Import CSV
                     </button>
                     <input type="file" id="csvFileInput" accept=".csv" class="hidden" onchange="handleCSVUpload(this)">
                     <a href="/api/manager/users/csv-template" download class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
-                        <span class="material-symbols-outlined text-sm">download</span> Tải CSV mẫu
+                        <span class="material-symbols-outlined text-sm">download</span> Download Sample CSV
                     </a>
                     <button onclick="exportUsers()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm flex items-center gap-2 transition-colors">
                         <span class="material-symbols-outlined text-sm">file_download</span> Export
@@ -595,19 +595,19 @@
                 </div>
                 <div class="flex gap-2 items-center flex-wrap">
                     <select id="roleFilter" onchange="loadUsers(1)" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-200">
-                        <option value="">Tất cả vai trò</option>
-                        <option value="student">Sinh viên</option>
-                        <option value="guard">Bảo vệ</option>
-                        <option value="staff">Nhân viên</option>
-                        <option value="manager">Quản lý</option>
+                        <option value="">All roles</option>
+                        <option value="student">Student</option>
+                        <option value="guard">Guard</option>
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
                     </select>
-                    <input type="text" id="userSearch" placeholder="Tìm kiếm..." oninput="debounceSearch(this.value)" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-200 w-48">
+                    <input type="text" id="userSearch" placeholder="Search..." oninput="debounceSearch(this.value)" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-200 w-48">
                 </div>
             </div>
 
             <!-- Add/Edit user form (hidden by default) -->
             <div id="userFormPanel" class="hidden mb-4 p-4 bg-slate-800/60 border border-slate-600 rounded-xl">
-                <h4 id="formPanelTitle" class="text-sm font-bold mb-3 text-primary">Thêm người dùng mới</h4>
+                <h4 id="formPanelTitle" class="text-sm font-bold mb-3 text-primary">Add New User</h4>
                 <form id="userForm" onsubmit="saveUser(event)" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <input type="hidden" id="editUserId" value="">
                     <div>
@@ -615,20 +615,20 @@
                         <input id="fUsername" required class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="username">
                     </div>
                     <div>
-                        <label class="text-xs text-slate-400 mb-1 block">Mật khẩu <span id="pwRequired" class="text-red-400">*</span>&lt;/label>
-                        <input id="fPassword" type="password" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="Mật khẩu">
+                        <label class="text-xs text-slate-400 mb-1 block">Password <span id="pwRequired" class="text-red-400">*</span>&lt;/label>
+                        <input id="fPassword" type="password" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="Password">
                     </div>
                     <div>
-                        <label class="text-xs text-slate-400 mb-1 block">Họ tên</label>
+                        <label class="text-xs text-slate-400 mb-1 block">Full Name</label>
                         <input id="fFullName" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="Nguyen Van A">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">Vai trò *</label>
                         <select id="fRole" required class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200">
-                            <option value="student">Sinh viên</option>
-                            <option value="guard">Bảo vệ</option>
-                            <option value="staff">Nhân viên</option>
-                            <option value="manager">Quản lý</option>
+                            <option value="student">Student</option>
+                            <option value="guard">Guard</option>
+                            <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
                         </select>
                     </div>
                     <div>
@@ -636,16 +636,16 @@
                         <input id="fEmail" type="email" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="email@example.com">
                     </div>
                     <div>
-                        <label class="text-xs text-slate-400 mb-1 block">Điện thoại</label>
+                        <label class="text-xs text-slate-400 mb-1 block">Phone</label>
                         <input id="fPhone" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200" placeholder="0901234567">
                     </div>
                     <div class="md:col-span-2">
-                        <label class="text-xs text-slate-400 mb-1 block">Biển số mặc định</label>
+                        <label class="text-xs text-slate-400 mb-1 block">Default Plate</label>
                         <input id="fPlate" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-200 uppercase" placeholder="61A12345">
                     </div>
                     <div class="md:col-span-4 flex gap-2 mt-1">
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Lưu</button>
-                        <button type="button" onclick="closeUserForm()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Hủy</button>
+                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Save</button>
+                        <button type="button" onclick="closeUserForm()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -656,17 +656,17 @@
                     <thead>
                         <tr class="text-slate-400 bg-slate-800/80 border-b border-slate-700">
                             <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Username</th>
-                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Họ tên</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Full Name</th>
                             <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Email</th>
-                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Điện thoại</th>
-                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Biển số</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Phone</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Plate</th>
                             <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Vai trò</th>
-                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Ngày tạo</th>
-                            <th class="py-3 px-3 text-center font-semibold text-xs uppercase tracking-wide">Hành động</th>
+                            <th class="py-3 px-3 text-left font-semibold text-xs uppercase tracking-wide">Created</th>
+                            <th class="py-3 px-3 text-center font-semibold text-xs uppercase tracking-wide">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody" class="divide-y divide-slate-700/50">
-                        <tr><td colspan="8" class="py-8 text-center text-slate-500">Đang tải...</td></tr>
+                        <tr><td colspan="8" class="py-8 text-center text-slate-500">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -774,7 +774,7 @@
                 var tbody = document.getElementById('gateLogsBody');
                 if (!tbody) return;
                 if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400">Chưa có dữ liệu</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400">No data yet</td></tr>';
                     return;
                 }
                 tbody.innerHTML = logs.map(function (log) {
@@ -853,7 +853,7 @@
                 var grid = document.getElementById('slotGrid');
                 if (!grid) return;
                 if (!slots.length) {
-                    grid.innerHTML = '<div class="text-center text-slate-400 text-sm py-8">Chưa có dữ liệu</div>';
+                    grid.innerHTML = '<div class="text-center text-slate-400 text-sm py-8">No data yet</div>';
                     return;
                 }
                 // Determine grid columns from number of slots
@@ -873,34 +873,34 @@
                         // Priority order: Hijacked > Warning > Occupied > VIP > Reserved > Empty
                         if (isHijacked) {
                             cls = 'border-rose-500/50 bg-rose-500/10 text-rose-500 hover:border-rose-500 animate-pulse';
-                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-500/20 text-rose-400">Bị chiếm</span>';
-                            tooltip = s.reservation ? 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-500/20 text-rose-400">Hijacked</span>';
+                            tooltip = s.reservation ? 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '';
                         } else if (isWarning) {
                             cls = 'border-amber-500/50 bg-amber-500/10 text-amber-500 hover:border-amber-500';
-                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/20 text-amber-400">Cảnh Báo</span>';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/20 text-amber-400">Warning</span>';
                         } else if (occupied) {
                             cls = 'border-primary/40 bg-primary/10 text-primary hover:border-primary/60';
                             statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-primary/20 text-primary">Có Xe</span>';
-                            if (s.reservation) tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
-                            else if (s.plate) tooltip = 'Biển số: ' + s.plate;
+                            if (s.reservation) tooltip = 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            else if (s.plate) tooltip = 'Plate: ' + s.plate;
                         } else if (isVip) {
                             // VIP slot - show as VIP (yellow) even if reserved (VIP has priority)
                             cls = 'border-yellow-500/50 bg-yellow-500/10 text-yellow-500 hover:border-yellow-500';
                             statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-yellow-500/20 text-yellow-400">VIP</span>';
                             if (reserved) {
-                                tooltip = 'Slot VIP - Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
-                            } else {
-                                tooltip = 'Slot VIP - Chỉ quản lý đặt được';
+                                tooltip = 'VIP Slot - Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                                } else {
+                                tooltip = 'VIP Slot - Only managers can reserve';
                             }
                         } else if (reserved) {
                             // Regular slot with reservation - show as RESERVED (blue)
                             cls = 'border-blue-500/50 bg-blue-500/10 text-blue-400 hover:border-blue-500';
-                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-blue-500/20 text-blue-400">Đã đặt</span>';
-                            tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-blue-500/20 text-blue-400">Reserved</span>';
+                            tooltip = 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
                         } else {
                             // Empty slot - show as AVAILABLE (green)
                             cls = 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:border-emerald-500';
-                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400">Trống</span>';
+                            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400">Empty</span>';
                         }
                         
                         var plate = s.plate ? s.plate : '—';
@@ -924,11 +924,11 @@
                 if (logs.error) return;
                 var tbody = document.getElementById('improperLogsBody');
                 if (!logs.length) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400 text-xs">Chưa có dữ liệu</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400 text-xs">No data yet</td></tr>';
                     return;
                 }
                 tbody.innerHTML = logs.map(function(log) {
-                    var location = log.event_type === 'outside' ? 'Lối Đi' : 'Slot ' + (log.slot_number || '—');
+                    var location = log.event_type === 'outside' ? 'Walkway' : 'Slot ' + (log.slot_number || '—');
                     var ts = log.timestamp ? new Date(log.timestamp) : null;
                     var duration = '—';
                     if (ts) {
@@ -960,7 +960,7 @@
         data: {
             labels: [],
             datasets: [
-                { label: 'Vào', data: [], backgroundColor: 'rgba(13, 204, 242, 0.5)', borderRadius: 2 },
+                { label: 'In', data: [], backgroundColor: 'rgba(13, 204, 242, 0.5)', borderRadius: 2 },
                 { label: 'Ra', data: [], backgroundColor: 'rgba(13, 204, 242, 0.2)', borderRadius: 2 }
             ]
         },
@@ -997,7 +997,7 @@
                 var items = data.week || data.month || [];
                 var container = document.getElementById('slotFreqBars');
                 if (!items.length) {
-                    container.innerHTML = '<span class="text-slate-400 text-xs">Chưa có dữ liệu</span>';
+                    container.innerHTML = '<span class="text-slate-400 text-xs">No data yet</span>';
                     return;
                 }
                 var top = items.slice(0, 3);
@@ -1024,15 +1024,15 @@
                 if (data.error) return;
                 var container = document.getElementById('violatorsBody');
                 if (!data.length) {
-                    container.innerHTML = '<div class="text-center text-emerald-400 text-sm py-4 font-bold">Không có xe nào vi phạm trên 5 lần</div>';
+                    container.innerHTML = '<div class="text-center text-emerald-400 text-sm py-4 font-bold">No vehicles with more than 5 violations</div>';
                     return;
                 }
                 container.innerHTML = data.map(function(v) {
-                    var plateCell = v.plate_text === 'Không nhận dạng'
+                    var plateCell = v.plate_text === 'Unrecognized'
                         ? '<span class="italic text-orange-400">' + v.plate_text + '</span>'
                         : v.plate_text;
                     var latest = v.events && v.events[0] ? v.events[0] : {};
-                    var desc = latest.event_type === 'outside' ? 'Đậu ngoài slot' : 'Đậu lấn ô';
+                    var desc = latest.event_type === 'outside' ? 'Parked outside slot' : 'Overlapping';
                     
                     var imgDisplay = latest.image_path
                         ? '<a href="' + latest.image_path + '" target="_blank"><img src="' + latest.image_path + '" class="h-6 w-auto rounded border border-rose-500/30 ml-2 object-cover" onerror="this.style.display=\'none\'"></a>'
@@ -1047,7 +1047,7 @@
                         '</div>' +
                         '<div class="text-right">' +
                         '<span class="text-lg font-bold text-rose-500">' + v.count + '</span>' +
-                        '<span class="text-[9px] text-slate-400 block uppercase leading-none">Lần</span>' +
+                        '<span class="text-[9px] text-slate-400 block uppercase leading-none">Times</span>' +
                         '</div>' +
                         '</div>';
                 }).join('');
@@ -1066,7 +1066,7 @@
                 var flagged = info.flagged_hours || [];
                 var peakEl = document.getElementById('peakHourText');
                 if (!flagged.length) {
-                    peakEl.innerHTML = '<span class="text-emerald-400">Không có khung giờ cao điểm</span>';
+                    peakEl.innerHTML = '<span class="text-emerald-400">No peak hours detected</span>';
                 } else {
                     var hours = flagged.map(function(f) { return f.hour; });
                     peakEl.textContent = hours[0] + ' — ' + hours[hours.length - 1];
@@ -1132,7 +1132,7 @@
         fetch('/api/manager/users?' + params)
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                if (data.error) { alert('Error: ' + data.error); return; }
                 _usersTotal = data.total;
                 renderUsersTable(data.items || []);
                 renderUsersPagination();
@@ -1144,10 +1144,10 @@
         var tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
         if (!users.length) {
-            tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">Không có dữ liệu</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">No data</td></tr>';
             return;
         }
-        var ROLE_LABELS = {manager: 'Quản lý', guard: 'Bảo vệ', staff: 'Nhân viên', student: 'Sinh viên'};
+        var ROLE_LABELS = {manager: 'Manager', guard: 'Guard', staff: 'Staff', student: 'Student'};
         var ROLE_COLORS = {manager: 'bg-purple-600', guard: 'bg-red-600', staff: 'bg-blue-600', student: 'bg-emerald-600'};
         var html = '';
         for (var i = 0; i < users.length; i++) {
@@ -1164,7 +1164,7 @@
             html += '<td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs text-white ' + roleColor + '">' + escHtml(roleLabel) + '</span></td>';
             html += '<td class="py-3 px-3 text-xs text-slate-400">' + createdAt + '</td>';
             html += '<td class="py-3 px-3 text-center">';
-            html += '<button onclick="editUser(' + u.user_id + ')" class="p-1.5 hover:text-blue-400 transition-colors" title="Sửa"><span class="material-symbols-outlined text-base">edit</span></button>';
+            html += '<button onclick="editUser(' + u.user_id + ')" class="p-1.5 hover:text-blue-400 transition-colors" title="Edit"><span class="material-symbols-outlined text-base">edit</span></button>';
             html += '<button onclick="deleteUser(' + u.user_id + ',\'' + escHtml(u.username).replace(/'/g, "\\'") + '\')" class="p-1.5 hover:text-red-400 transition-colors" title="Xóa"><span class="material-symbols-outlined text-base">delete</span></button>';
             html += '</td></tr>';
         }
@@ -1200,7 +1200,7 @@
         document.getElementById('fPhone').value = '';
         document.getElementById('fPlate').value = '';
         document.getElementById('fRole').value = 'student';
-        document.getElementById('formPanelTitle').textContent = 'Thêm người dùng mới';
+        document.getElementById('formPanelTitle').textContent = 'Add New User';
         document.getElementById('userFormPanel').classList.remove('hidden');
     }
 
@@ -1227,7 +1227,7 @@
                 for (var i = 0; i < items.length; i++) {
                     if (items[i].user_id === uid) { u = items[i]; break; }
                 }
-                if (!u) { alert('Không tìm thấy user'); return; }
+                if (!u) { alert('User not found'); return; }
                 document.getElementById('editUserId').value = u.user_id;
                 document.getElementById('fUsername').value = u.username;
                 document.getElementById('fUsername').disabled = true;
@@ -1238,10 +1238,10 @@
                 document.getElementById('fPhone').value = u.phone || '';
                 document.getElementById('fPlate').value = u.plate || '';
                 document.getElementById('fRole').value = u.role;
-                document.getElementById('formPanelTitle').textContent = 'Sửa người dùng';
+                document.getElementById('formPanelTitle').textContent = 'Edit User';
                 document.getElementById('userFormPanel').classList.remove('hidden');
             })
-            .catch(function(e) { alert('Lỗi: ' + e); });
+            .catch(function(e) { alert('Error: ' + e); });
     }
 
     function saveUser(e) {
@@ -1265,22 +1265,22 @@
         })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                if (data.error) { alert('Error: ' + data.error); return; }
                 closeUserForm();
                 loadUsers(_usersPage, _usersSearch);
             })
-            .catch(function(e) { alert('Lỗi: ' + e); });
+            .catch(function(e) { alert('Error: ' + e); });
     }
 
     function deleteUser(uid, username) {
-        if (!confirm('Xóa tài khoản "' + username + '"?\nHành động này không thể hoàn tác.')) return;
+        if (!confirm('Delete account "' + username + '"?\nThis action cannot be undone.')) return;
         fetch('/api/manager/users/' + uid, {method: 'DELETE'})
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.error) { alert('Lỗi: ' + data.error); return; }
+                if (data.error) { alert('Error: ' + data.error); return; }
                 loadUsers(_usersPage, _usersSearch);
             })
-            .catch(function(e) { alert('Lỗi: ' + e); });
+            .catch(function(e) { alert('Error: ' + e); });
     }
 
     function handleCSVUpload(input) {
@@ -1291,9 +1291,9 @@
         fetch('/api/manager/users/import-csv', {method: 'POST', body: formData})
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.error) { alert('Lỗi: ' + data.error); }
+                if (data.error) { alert('Error: ' + data.error); }
                 else {
-                    var msg = 'Đã tạo ' + data.created + ' tài khoản.';
+                    var msg = 'Created ' + data.created + ' account(s).';
                     if (data.skipped && data.skipped.length) {
                         msg += ' Bỏ qua ' + data.skipped.length + ' dòng:';
                         for (var i = 0; i < Math.min(data.skipped.length, 3); i++) {
@@ -1305,7 +1305,7 @@
                     loadUsers(1, _usersSearch);
                 }
             })
-            .catch(function(e) { alert('Lỗi: ' + e); });
+            .catch(function(e) { alert('Error: ' + e); });
         input.value = '';
     }
 

@@ -1,0 +1,41 @@
+# ByteTrack config — tuned for the gate camera (YOLOv8s, fast vehicles crossing 3 lines)
+#
+# Design intent:
+#   - Vehicles enter the frame and cross the 3 detection lines within ~1-3 seconds.
+#   - track_id MUST remain stable across the entire transit so the line-crossing
+#     state machine in detect_track_worker can register touch on LINE_1 then LINE_2
+#     (or LINE_1 then LINE_3) for the SAME id.
+#   - At the same time we want the tracker to ATTACH to a vehicle as soon as it
+#     appears (low new_track_thresh) so the operator sees a bbox immediately.
+#   - We do NOT need long memory (no occlusion behind other vehicles like in
+#     parking lot) — keep track_buffer modest to avoid stale IDs floating around.
+
+tracker_type: bytetrack
+
+# Detection threshold a candidate must reach to be considered a "high" detection.
+# Must be <= GATE_DETECT_CONF (default 0.25). Keeping it equal avoids dropping
+# borderline detections that just barely passed the model gate.
+track_high_thresh: 0.25
+
+# Low-association threshold — tracker still tries to bind very low-conf boxes
+# to existing tracks (helps when a vehicle is briefly motion-blurred at the gate).
+track_low_thresh: 0.05
+
+# Threshold to spawn a brand new track. Slightly above low_thresh so noise does
+# not create ghost tracks, but low enough that real vehicles get a track on
+# their very first frame in view.
+new_track_thresh: 0.25
+
+# How many frames a lost track is kept before being deleted.
+# 90 frames ~= 3 seconds at 30 FPS — covers brief detection drops at the gate
+# without holding old IDs long enough for plate cross-contamination.
+track_buffer: 90
+
+# IoU match threshold for associating detections to existing tracks.
+# Slightly relaxed compared to the default 0.8 so a fast-moving vehicle whose
+# bbox jumps by ~50% between frames still keeps its track id.
+match_thresh: 0.9
+
+# Fuse detection score with IoU during matching — more robust at the gate where
+# vehicles approach the camera and bbox size changes rapidly.
+fuse_score: True

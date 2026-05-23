@@ -1,0 +1,133 @@
+{
+  "available": {
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1": 100.0,
+    "accuracy": 100.0,
+    "support": 20,
+    "tp": 20,
+    "fp": 0,
+    "fn": 0
+  },
+  "occupied": {
+    "precision": 98.6,
+    "recall": 100.0,
+    "f1": 99.3,
+    "accuracy": 100.0,
+    "support": 355,
+    "tp": 355,
+    "fp": 5,
+    "fn": 0
+  },
+  "overlapping": {
+    "precision": 0,
+    "recall": 0.0,
+    "f1": 0,
+    "accuracy": 0.0,
+    "support": 5,
+    "tp": 0,
+    "fp": 0,
+    "fn": 5
+  },
+  "outside": {
+    "precision": 0,
+    "recall": 0,
+    "f1": 0,
+    "accuracy": 0,
+    "support": 0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "overall": {
+    "accuracy": 98.7,
+    "balanced_accuracy": 50.0,
+    "macro_precision": 49.7,
+    "macro_recall": 50.0,
+    "macro_f1": 49.8,
+    "weighted_precision": 97.4,
+    "weighted_recall": 98.7,
+    "weighted_f1": 98.0,
+    "total_slots": 380,
+    "total_frames": 20
+  },
+  "per_slot": {
+    "slot_0": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_1": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_2": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_3": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_4": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_5": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_6": {
+      "accuracy": 75.0,
+      "total": 20
+    },
+    "slot_7": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_8": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_9": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_10": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_11": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_12": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_13": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_14": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_15": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_16": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_17": {
+      "accuracy": 100.0,
+      "total": 20
+    },
+    "slot_18": {
+      "accuracy": 100.0,
+      "total": 20
+    }
+  },
+  "fps": 18.47926048310864
+}

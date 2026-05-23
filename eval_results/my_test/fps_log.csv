@@ -1,0 +1,9 @@
+stat,value
+avg_fps,39.0294
+min_fps,26.3867
+max_fps,42.1519
+median_fps,39.2929
+p95_fps,36.5883
+std_fps,1.9708
+frames_measured,200.0000
+warmup_frames,10.0000

@@ -71,6 +71,18 @@ class RobustRTSPCapture:
         """Flush buffer to discard old frames"""
         if self.cap:
             self.cap.flush(wait_seconds=wait_seconds)
+
+    def drain(self) -> int:
+        """Drop all buffered frames without sleeping. Returns # frames dropped."""
+        if self.cap and hasattr(self.cap, 'drain'):
+            return self.cap.drain()
+        return 0
+
+    def qsize(self) -> int:
+        """Current number of buffered frames (approximate)."""
+        if self.cap and hasattr(self.cap, 'qsize'):
+            return self.cap.qsize()
+        return 0
     
     def get_stats(self):
         """Get connection statistics"""

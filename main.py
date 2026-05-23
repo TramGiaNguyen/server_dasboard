@@ -11,7 +11,7 @@ This file initializes the Flask application and starts all services:
 
 Usage:
     python main.py
-    python main.py cleanup --days 30 --dry-run
+    python main.py cleanup --days 7 --dry-run
 """
 
 import os
@@ -22,12 +22,22 @@ from datetime import datetime, timedelta, timezone
 # Set environment variable to allow duplicated libraries (must be before imports)
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+# Cap OMP / MKL / BLAS thread counts BEFORE any heavy import (torch, cv2, numpy,
+# onnxruntime). Without this, on 16+ logical core hosts each library spawns one
+# worker per core and total throughput collapses under context switching.
+from shared.runtime_limits import setup_runtime_limits, apply_torch_limits
+_RT_LIMITS = setup_runtime_limits()
+print(f"[RUNTIME] Thread caps: torch={_RT_LIMITS['torch_threads']} "
+      f"onnx_intra={_RT_LIMITS['onnx_intra_op']} onnx_inter={_RT_LIMITS['onnx_inter_op']}")
+
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 
 from config import SERVER_HOST, SERVER_PORT, PARKING_VIDEO_URL, GATE_VIDEO_URL, PARKING_USE_HALF_PRECISION
 from shared.models import check_gpu, initialize_model
+# Now that torch has been imported, apply per-process thread caps.
+apply_torch_limits()
 from shared.state import current_parking_status, gate_ocr_results
 from api.routes import register_routes
 from database.db import init_db
@@ -59,7 +69,7 @@ register_routes(app, socketio)
 
 # ── Cleanup CLI command ────────────────────────────────────────────────────────
 @app.cli.command('cleanup')
-@click.option('--days', default=30, help='Number of days to retain (default: 30)')
+@click.option('--days', default=7, help='Number of days to retain (default: 7)')
 @click.option('--dry-run', is_flag=True, help='Preview what would be deleted without deleting anything')
 def cleanup_cmd(days, dry_run):
     """Remove database records older than N days and orphaned image files."""
@@ -120,7 +130,7 @@ def _run_cleanup_scheduler(app, interval_hours=24, run_hour_utc=3):
         print(f"[CLEANUP] Next scheduled run at {next_run.strftime('%Y-%m-%d %H:%M')} UTC (in {wait_seconds/3600:.1f}h)")
         time.sleep(wait_seconds)
         with app.app_context():
-            run_scheduled_cleanup(days=30)
+            run_scheduled_cleanup(days=7)
         # Loop immediately computes next time after each run
 
 

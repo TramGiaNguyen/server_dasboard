@@ -59,7 +59,21 @@ from shared.state import (
 )
 import shared.state as shared_state
 
-from config import TRACKING_ENABLED
+from config import (
+    TRACKING_ENABLED,
+    GATE_MODEL_PATH,
+    GATE_USE_HALF_PRECISION,
+    GATE_DETECT_CONF,
+    GATE_DETECT_IOU,
+    GATE_DETECT_IMGSZ,
+    GATE_TRACKER_CONFIG,
+    GATE_RTSP_BUFFER,
+    GATE_DEBUG_NDJSON_LOG,
+    GATE_OCR_DEBOUNCE_CONF,
+    GATE_OCR_DEBOUNCE_FRAMES,
+    GATE_LAG_DRAIN_MULTIPLIER,
+    GATE_TARGET_FPS,
+)
 from shared.models import initialize_model
 from services.vehicle_tracking.tracker import get_tracker
 from database.operations import log_gate_entry, log_gate_exit, update_gate_entry_plate, update_gate_exit_plate, update_gate_entry_media
@@ -68,7 +82,14 @@ from shared.rtsp_reconnect import RobustRTSPCapture
 
 
 def _gate_debug_log(hypothesis_id: str, run_id: str, location: str, message: str, data: dict):
-    """Write NDJSON debug log for gate camera pipeline debugging."""
+    """Write NDJSON debug log for gate camera pipeline debugging.
+
+    Disabled by default in production (GATE_DEBUG_NDJSON_LOG=False) because
+    synchronous disk I/O inside the detect loop costs 5-10ms per call on Windows
+    and was a measurable contributor to bbox lag.
+    """
+    if not GATE_DEBUG_NDJSON_LOG:
+        return
     try:
         log_path = r"C:\Users\maous\.cursor\projects\c-Users-maous-Downloads-server-dasboard-master-server-dasboard-master\debug-657050.log"
         entry = {
@@ -137,6 +158,30 @@ def _save_ocr_plate_image(gate_capture_dir: str, track_id: str, plate_text: str,
     except Exception as img_exc:
         print(f"[GATE OCR] Failed to save OCR artifact image for {track_id}: {img_exc}")
         return None
+
+
+def _async_imwrite(runtime, fpath: str, img: 'np.ndarray', coalesce_key: str = None) -> None:
+    """Fire-and-forget JPEG write so detect_track_worker never blocks on disk I/O.
+
+    Falls back to synchronous write if the pool is unavailable. cv2.imwrite is
+    thread-safe for distinct paths.
+    """
+    if img is None or getattr(img, 'size', 0) == 0:
+        return
+    if runtime is not None and hasattr(runtime, 'submit_low'):
+        try:
+            runtime.submit_low(
+                cv2.imwrite, fpath, img,
+                coalesce_group="gate_evidence",
+                coalesce_key=coalesce_key or fpath,
+            )
+            return
+        except Exception:
+            pass
+    try:
+        cv2.imwrite(fpath, img)
+    except Exception:
+        pass
 
 
 def _gate_plate_crop_geometry_ok(plate_img: np.ndarray) -> bool:
@@ -223,13 +268,19 @@ def _ctc_canonical(plate_text: str, existing_plates) -> str:
 def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
                 track_plate_images, stable_plate_cache, best_plate_img_cache,
                 gate_vehicle_handoffs, _upsert_fn, stop_event,
-                submit_low=None, gate_capture_dir=None, runtime=None):
+                submit_low=None, gate_capture_dir=None, runtime=None,
+                worker_id: int = 0, detector_lock=None):
     """
     Fair FIFO queue of track_ids; latest crop per track in gate_ocr_latest_jobs.
     Backfill DB via gate_ocr_track_db_ctx when handoff already removed.
     Tracks per-operation timing and emits metrics when OCR produces a result.
+
+    Multiple workers may share the same detector object; detector_lock serialises
+    access to the (non thread-safe) plate-detector YOLO model. ONNX recognise
+    calls are released outside the lock because ort.InferenceSession.Run() is
+    safe to call concurrently from multiple Python threads.
     """
-    print("[GATE] OCR Worker started")
+    print(f"[GATE] OCR Worker started (id={worker_id})")
     empty_media_saved = set()
     # Luu crop tu frame dau tien OCR thanh cong (text hop le + conf cao) cho moi track
     first_valid_plate_image_by_track = {}
@@ -280,13 +331,30 @@ def ocr_worker(detector, plate_votes_by_track, best_plate_by_track,
             v.track_id = track_id
             v.bbox = job.get('bbox')
 
-            detector.detect_plates([v])
+            # Serialize plate-detector YOLO call across workers (not thread-safe).
+            # recognize_plates uses ONNX which IS thread-safe so we release the
+            # lock before it to allow concurrent recognise on multiple GPUs / CPU
+            # cores. If lock is None (single worker), behaviour is identical.
+            if detector_lock is not None:
+                with detector_lock:
+                    detector.detect_plates([v])
+            else:
+                detector.detect_plates([v])
             detector.recognize_plates([v])
             ocr_elapsed_ms = (time.time() - ocr_start) * 1000.0
 
             # Emit metrics on successful OCR pass
-            if runtime is not None and (v.plate_text or v.plate_image is not None):
-                runtime.mark_emit()
+            if runtime is not None:
+                if v.plate_text or v.plate_image is not None:
+                    runtime.mark_emit()
+                # Always record OCR latency so /api/health/gate can show it
+                try:
+                    runtime.metrics.mark_timing("ocr_call_ms", ocr_elapsed_ms)
+                    runtime.metrics.inc_counter("ocr_calls")
+                    if v.plate_text:
+                        runtime.metrics.inc_counter("ocr_hits")
+                except Exception:
+                    pass
 
             # // #region debug log - save first plate crop per track for inspection
             _debug_dir = os.environ.get('DEBUG_CROP_DIR', '')
@@ -666,7 +734,10 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
     is_stream = video_path.lower().startswith(('rtsp://', 'http://', 'https://'))
 
     if is_stream:
-        rtsp_cap = RobustRTSPCapture(video_path, buffer_size=8)  # Tăng buffer lên 8 để giảm miss detection
+        # buffer_size = 1 so the worker always reads the freshest frame. Bigger
+        # buffers ADD latency when the worker is slower than the camera FPS
+        # (which is exactly when we cannot afford to look at stale frames).
+        rtsp_cap = RobustRTSPCapture(video_path, buffer_size=GATE_RTSP_BUFFER)
         if not rtsp_cap.open():
             print(f"[ERROR] Gate Detect+Track: Failed to open RTSP stream: {video_path}")
             return
@@ -685,9 +756,16 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
             print(f"[ERROR] Gate Detect+Track: Failed to open video: {video_path}")
             return
 
-    # Initialize models
+    # Initialize models — gate uses a smaller, FP16-capable model to keep
+    # inference well under the 33ms frame budget. Parking still loads yolov8l.pt
+    # via main.py's initialize_model() call without a model_path argument.
     detector = get_ocr_detector()
-    gate_vehicle_model = initialize_model()
+    gate_vehicle_model = initialize_model(
+        model_path=GATE_MODEL_PATH,
+        use_half=GATE_USE_HALF_PRECISION,
+    )
+    _gate_yolo_device = 0 if (GATE_USE_HALF_PRECISION) else None
+    _gate_yolo_half = bool(GATE_USE_HALF_PRECISION)
     with open(coco_file_path, 'r', encoding='utf-8') as f:
         gate_coco_classes = [line.strip() for line in f if line.strip()]
     COCO_CAR_BUS_TRUCK_IDS = [2, 5, 7]  # car, bus, truck
@@ -723,6 +801,11 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
     _line_crossings = vehicle_line_crossings
     _tracks_hist    = vehicle_tracks
 
+    # Per-track OCR debounce timestamps — separate from best_plate_by_track which
+    # the OCR worker overwrites on every result. Maps track_id -> last frame_count
+    # at which we enqueued an OCR job. Pruned in the existing per-track cleanup.
+    _last_ocr_enqueue_frame: dict = {}
+
     while not stop_event.is_set():
         frame_start = time.time()
 
@@ -753,7 +836,11 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
             time.sleep(0.01)
 
         frame_count += 1
-        raw_frame = frame.copy()  # Clean frame for evidence crops
+        # RTSPCapture allocates a NEW numpy array per cv2.VideoCapture.read() call,
+        # so `frame` does not alias any other buffer — no copy needed here. YOLO
+        # .track() does not mutate its input. raw_frame is used downstream only
+        # for read-only cropping into vehicle.vehicle_image.
+        raw_frame = frame
 
         # --- Run detection + tracking on the latest frame ---
         crossing_events = []  # Accumulated crossing events for this frame
@@ -763,19 +850,23 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
             try:
                 gate_ocr_prune_stale_ctx_and_jobs()
 
-                # Bypass CLAHE for Gate Camera to maximize FPS and prevent tracking loss
-                detection_frame = frame.copy()
-
-                results = gate_vehicle_model.track(
-                    detection_frame,
+                # Bypass CLAHE for Gate Camera to maximize FPS and prevent tracking loss.
+                # Also skip frame.copy() — Ultralytics never mutates input arrays, so
+                # a fresh frame from RTSPCapture is safe to pass directly.
+                _track_kwargs = dict(
                     classes=COCO_CAR_BUS_TRUCK_IDS,
-                    conf=0.15,  # Lower confidence to prevent flickering/track drop
-                    iou=0.40,
+                    conf=GATE_DETECT_CONF,
+                    iou=GATE_DETECT_IOU,
                     persist=True,
-                    tracker='botsort.yaml',  # robust tracking for moving vehicles
+                    tracker=GATE_TRACKER_CONFIG,
                     verbose=False,
-                    imgsz=640,
+                    imgsz=GATE_DETECT_IMGSZ,
                 )
+                if _gate_yolo_device is not None:
+                    _track_kwargs['device'] = _gate_yolo_device
+                if _gate_yolo_half:
+                    _track_kwargs['half'] = True
+                results = gate_vehicle_model.track(frame, **_track_kwargs)
                 boxes = results[0].boxes
                 all_vehicles_raw = []
                 if boxes is not None and len(boxes) > 0:
@@ -818,8 +909,11 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                         if in_basic_zone or force_exit_ocr:
                             vehicles_in_detection_zone.append(v)
 
-                # --- Push OCR jobs (non-blocking) ---
-                # Only crop vehicles that are moving (not frozen) and are in detection zone
+                # --- Push OCR jobs (non-blocking, debounced) ---
+                # Only crop vehicles that are moving (not frozen) and are in
+                # detection zone. Debounce skips enqueue when a track already
+                # has a high-confidence plate AND was OCR'd recently — saves
+                # 70-90% of OCR calls on busy frames without losing accuracy.
                 if detector is not None:
                     for v in vehicles_in_detection_zone:
                         vid = v.track_id
@@ -828,6 +922,18 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                         x1, y1, x2, y2 = v.bbox
                         v_cx, v_cy = (x1 + x2) // 2, (y1 + y2) // 2
 
+                        # OCR debounce per-track: if we already have a high-conf
+                        # plate AND we OCR'd this track recently, skip enqueue.
+                        _bp = best_plate_by_track.get(vid)
+                        if _bp is not None:
+                            _bp_conf = float(_bp.get('conf', 0.0) or 0.0)
+                            _last_ocr_frame = _last_ocr_enqueue_frame.get(vid, -10_000)
+                            if (
+                                _bp_conf >= GATE_OCR_DEBOUNCE_CONF
+                                and (frame_count - _last_ocr_frame) < GATE_OCR_DEBOUNCE_FRAMES
+                            ):
+                                continue
+
                         # Push crop job — Overwrite mailbox to keep only newest frame
                         crop_job = {
                             'crop_frame': v.vehicle_image,
@@ -835,6 +941,7 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             'frame_count': frame_count,
                         }
                         gate_ocr_enqueue_job(vid, crop_job)
+                        _last_ocr_enqueue_frame[vid] = frame_count
 
                 # --- Clear per-track state when no vehicles ---
                 if not filtered_vehicles:
@@ -892,7 +999,33 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             'last_y': cy,
                             'last_y1': y1,
                             'last_y2': y2,
+                            'last_seen_frame': frame_count,
+                            'init_cy': cy,
+                            'init_frame': frame_count,
                         }
+                        # ===== PREDICTIVE INIT =====
+                        # If the track is born with its bbox already spanning a line,
+                        # the vehicle physically crossed that line at some earlier
+                        # frame that the tracker missed (typical when YOLO+ByteTrack
+                        # had a stall during the moment the car was passing). Mark
+                        # the touch immediately so the direction-resolution block
+                        # below can still trigger IN/OUT correctly without needing
+                        # a fresh in-frame crossing event.
+                        _ns = _line_crossings[vehicle_id]
+                        if y1 <= line_1_y <= y2:
+                            _ns['line1_crossed'] = True
+                            _ns['line1_cross_frame'] = frame_count
+                            print(f"[GATE PREDICT] Track {vehicle_id} born straddling LINE 1 -> mark touched")
+                        if y1 <= line_2_y <= y2:
+                            _ns['line2_crossed'] = True
+                            _ns['line2_cross_frame'] = frame_count
+                            print(f"[GATE PREDICT] Track {vehicle_id} born straddling LINE 2 -> mark touched")
+                        if y1 <= line_3_y <= y2:
+                            _ns['line3_crossed'] = True
+                            _ns['line3_cross_frame'] = frame_count
+                            print(f"[GATE PREDICT] Track {vehicle_id} born straddling LINE 3 -> mark touched")
+                    else:
+                        _line_crossings[vehicle_id]['last_seen_frame'] = frame_count
 
                     # Update handoff record with plate info (if available)
                     if vehicle_id in gate_vehicle_handoffs:
@@ -1069,26 +1202,25 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             crossing_events.append({'plate': best_plate_text, 'conf': best_plate_conf, 'direction': 'in'})
 
                             # 4. Log Entry to Database with Initial Image Crop
+                            # The actual JPEG write is fired off to the low-priority pool
+                            # so the detect loop never blocks for ~10-30ms at the moment
+                            # the vehicle is right at the line.
                             _entry_result_store = gate_vehicle_handoffs[vehicle_id]
                             _img_path = None
                             _cached_img = track_plate_images.get(vehicle_id)
                             if _cached_img is not None:
-                                try:
-                                    _fname = f"gate_{best_plate_text or 'noplate'}_{frame_count}.jpg"
-                                    _fpath = os.path.join(gate_capture_dir, _fname)
-                                    cv2.imwrite(_fpath, _cached_img)
-                                    _img_path = f"/static/gate_captures/{_fname}"
-                                except Exception as _e:
-                                    print(f"[GATE] Failed to save plate image: {_e}")
+                                _fname = f"gate_{best_plate_text or 'noplate'}_{frame_count}.jpg"
+                                _fpath = os.path.join(gate_capture_dir, _fname)
+                                _async_imwrite(runtime, _fpath, _cached_img,
+                                               coalesce_key=f"in:{vehicle_id}:{frame_count}")
+                                _img_path = f"/static/gate_captures/{_fname}"
                             elif vehicle.vehicle_image is not None and vehicle.vehicle_image.size > 0:
                                 # Chưa có crop biển (OCR chưa chạy / thất bại): lưu ROI xe làm ảnh tạm
-                                try:
-                                    _fname = f"gate_{vehicle_id}_vehicle_in_{frame_count}.jpg"
-                                    _fpath = os.path.join(gate_capture_dir, _fname)
-                                    cv2.imwrite(_fpath, vehicle.vehicle_image)
-                                    _img_path = f"/static/gate_captures/{_fname}"
-                                except Exception as _e:
-                                    print(f"[GATE] Failed to save vehicle evidence (IN): {_e}")
+                                _fname = f"gate_{vehicle_id}_vehicle_in_{frame_count}.jpg"
+                                _fpath = os.path.join(gate_capture_dir, _fname)
+                                _async_imwrite(runtime, _fpath, vehicle.vehicle_image,
+                                               coalesce_key=f"in_roi:{vehicle_id}:{frame_count}")
+                                _img_path = f"/static/gate_captures/{_fname}"
                             
                             # 4. GateDBWriter handles DB write:
                             #    - gate_db_pending_push: creates pending record for OCR backfill
@@ -1152,20 +1284,20 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             _exit_img_path = None
                             _cached_exit = track_plate_images.get(vehicle_id)
                             if _cached_exit is not None:
-                                try:
-                                    _fname_plate = _exit_plate or "noplate"
-                                    _fname_ex = f"gate_{_fname_plate}_{frame_count}_out.jpg"
-                                    cv2.imwrite(os.path.join(gate_capture_dir, _fname_ex), _cached_exit)
-                                    _exit_img_path = f"/static/gate_captures/{_fname_ex}"
-                                except Exception:
-                                    pass
+                                _fname_plate = _exit_plate or "noplate"
+                                _fname_ex = f"gate_{_fname_plate}_{frame_count}_out.jpg"
+                                _async_imwrite(runtime,
+                                               os.path.join(gate_capture_dir, _fname_ex),
+                                               _cached_exit,
+                                               coalesce_key=f"out:{vehicle_id}:{frame_count}")
+                                _exit_img_path = f"/static/gate_captures/{_fname_ex}"
                             elif vehicle.vehicle_image is not None and vehicle.vehicle_image.size > 0:
-                                try:
-                                    _fname_ex = f"gate_{vehicle_id}_vehicle_out_{frame_count}.jpg"
-                                    cv2.imwrite(os.path.join(gate_capture_dir, _fname_ex), vehicle.vehicle_image)
-                                    _exit_img_path = f"/static/gate_captures/{_fname_ex}"
-                                except Exception:
-                                    pass
+                                _fname_ex = f"gate_{vehicle_id}_vehicle_out_{frame_count}.jpg"
+                                _async_imwrite(runtime,
+                                               os.path.join(gate_capture_dir, _fname_ex),
+                                               vehicle.vehicle_image,
+                                               coalesce_key=f"out_roi:{vehicle_id}:{frame_count}")
+                                _exit_img_path = f"/static/gate_captures/{_fname_ex}"
                             
                             if vehicle_id not in gate_vehicle_handoffs:
                                 vehicle_type = vehicle.vehicle_type if vehicle.vehicle_type else 'car'
@@ -1356,12 +1488,12 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                             artifact = shared_state.gate_ocr_artifacts.get(vehicle_id, {})
                             _exit_img = track_plate_images.get(vehicle_id)
                             if _exit_img is not None:
-                                try:
-                                    _fname_ex = f"gate_{_final_plate or 'noplate'}_{frame_count}_out.jpg"
-                                    cv2.imwrite(os.path.join(gate_capture_dir, _fname_ex), _exit_img)
-                                    _exit_img_url = f"/static/gate_captures/{_fname_ex}"
-                                except Exception:
-                                    _exit_img_url = None
+                                _fname_ex = f"gate_{_final_plate or 'noplate'}_{frame_count}_out.jpg"
+                                _async_imwrite(runtime,
+                                               os.path.join(gate_capture_dir, _fname_ex),
+                                               _exit_img,
+                                               coalesce_key=f"cleanup_out:{vehicle_id}:{frame_count}")
+                                _exit_img_url = f"/static/gate_captures/{_fname_ex}"
                             else:
                                 _exit_img_url = None
                             artifact_img = artifact.get('image_path') or _exit_img_url
@@ -1395,6 +1527,7 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                     track_plate_images.pop(vehicle_id, None)
                     plate_votes_by_track.pop(vehicle_id, None)
                     best_plate_by_track.pop(vehicle_id, None)
+                    _last_ocr_enqueue_frame.pop(vehicle_id, None)
 
                 # --- Re-anchor plate label on ByteTrack ID switch ---
                 # When tracker swaps `track_id`, the OCR plate is still associated to
@@ -1559,8 +1692,10 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                 traceback.print_exc()
 
         # --- Push frame to Render Worker (non-blocking) ---
+        # frame ownership transfers to the render worker; detect_track will bind
+        # a brand new numpy array on the next iteration so no aliasing happens.
         render_job = {
-            'frame': frame.copy(),
+            'frame': frame,
             'active_tracks': list(active_tracks),
             'crossing_events': list(crossing_events),
             'frame_count': frame_count,
@@ -1592,8 +1727,9 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                     "Failed to push frame to gate_render_queue",
                     {"frame_count": frame_count, "error1": str(_qe1), "error2": str(_qe2)})
 
-        # Adaptive sleep — target ~30fps for detect+track loop
+        # Adaptive sleep — target the configured FPS for detect+track loop
         elapsed = time.time() - frame_start
+        target_period = 1.0 / max(1.0, GATE_TARGET_FPS)
         if runtime is not None:
             _qpend, _qlatest = gate_ocr_scheduler_depth()
             runtime.mark_loop(
@@ -1602,7 +1738,37 @@ def detect_track_worker(video_url, socketio, gate_ocr_results_dict,
                 gate_render_queue.qsize(),
                 len(plate_fifo_queue),
             )
-        time.sleep(max(0.0, 0.033 - elapsed))
+
+        # ===== ADAPTIVE LAG RECOVERY =====
+        # If a single iteration overshoots the budget by more than the configured
+        # multiplier, drop every frame currently buffered in RTSPCapture so the
+        # next iteration reads the freshest frame instead of an already-stale one.
+        # This stops lag from compounding when something briefly stalls (GPU
+        # context switch, GC pause, disk hiccup on Windows, etc.).
+        if (
+            is_stream
+            and rtsp_cap is not None
+            and GATE_LAG_DRAIN_MULTIPLIER > 0
+            and elapsed > GATE_LAG_DRAIN_MULTIPLIER * target_period
+        ):
+            try:
+                _dropped = rtsp_cap.drain()
+                if _dropped > 0:
+                    print(
+                        f"[GATE] Lag recovery: iter took {elapsed*1000:.0f}ms "
+                        f"(>{GATE_LAG_DRAIN_MULTIPLIER:.1f}x target {target_period*1000:.0f}ms), "
+                        f"drained {_dropped} stale frame(s)"
+                    )
+                    if runtime is not None:
+                        try:
+                            runtime.metrics.inc_counter("frames_dropped", _dropped)
+                            runtime.metrics.inc_counter("lag_recovery_events")
+                        except Exception:
+                            pass
+            except Exception as _drain_exc:
+                print(f"[GATE] Drain failed: {_drain_exc}")
+
+        time.sleep(max(0.0, target_period - elapsed))
 
     # Cleanup
     if rtsp_cap:

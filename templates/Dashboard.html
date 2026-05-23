@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Giám Sát Bãi Xe - BDU Smart Parking</title>
-    <meta name="description" content="Hệ thống giám sát bãi đỗ xe thông minh - Đại học Bình Dương">
+    <title>Parking Lot Monitor - BDU Smart Parking</title>
+    <meta name="description" content="Smart parking monitoring system - Binh Duong University">
 
     <!-- Google Fonts: Inter & Fira Code -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -771,35 +771,35 @@
         <div class="stat-card glass-panel">
             <div class="stat-icon"><i data-lucide="layout-grid"></i></div>
             <div class="stat-info">
-                <div class="stat-label">Tổng Vị Trí</div>
+                <div class="stat-label">Total Slots</div>
                 <div class="stat-value" id="total_spaces">0</div>
             </div>
         </div>
         <div class="stat-card glass-panel success">
             <div class="stat-icon"><i data-lucide="check-circle"></i></div>
             <div class="stat-info">
-                <div class="stat-label">Khả Dụng</div>
+                <div class="stat-label">Available</div>
                 <div class="stat-value" id="available_spaces">0</div>
             </div>
         </div>
         <div class="stat-card glass-panel">
             <div class="stat-icon"><i data-lucide="car"></i></div>
             <div class="stat-info">
-                <div class="stat-label">Đã Sử Dụng</div>
+                <div class="stat-label">Occupied</div>
                 <div class="stat-value" id="occupied_spaces">0</div>
             </div>
         </div>
         <div class="stat-card glass-panel warning">
             <div class="stat-icon"><i data-lucide="alert-triangle"></i></div>
             <div class="stat-info">
-                <div class="stat-label">Đậu Lấn Ô</div>
+                <div class="stat-label">Overlapping</div>
                 <div class="stat-value" id="overlapping_vehicles_count">0</div>
             </div>
         </div>
         <div class="stat-card glass-panel danger">
             <div class="stat-icon"><i data-lucide="x-circle"></i></div>
             <div class="stat-info">
-                <div class="stat-label">Đậu Ngoài</div>
+                <div class="stat-label">Outside</div>
                 <div class="stat-value" id="outside_vehicles_count">0</div>
             </div>
         </div>
@@ -811,31 +811,31 @@
         <div class="left-col">
             <!-- Two Video Feeds Side by Side -->
             <div class="video-row">
-                <!-- Camera Bãi Xe -->
+                <!-- Parking Lot Camera -->
                 <div class="video-section glass-panel" style="padding:0;">
                     <div class="video-header">
                         <span class="video-header-left">
                             <span class="rec-dot"></span>
-                            CAM-01: Bãi Xe
+                            CAM-01: Parking Lot
                         </span>
                         <span class="video-header-right">LIVE</span>
                     </div>
                     <div class="video-wrapper">
-                        <img id="videoParking" src="/video_feed" alt="Camera Bãi Xe">
+                        <img id="videoParking" src="/video_feed" alt="Parking Lot Camera">
                     </div>
                 </div>
 
-                <!-- Camera Cổng -->
+                <!-- Gate Camera -->
                 <div class="video-section glass-panel" style="padding:0;">
                     <div class="video-header">
                         <span class="video-header-left">
                             <span class="rec-dot"></span>
-                            CAM-02: Cổng Vào
+                            CAM-02: Entry Gate
                         </span>
                         <span class="video-header-right">LIVE</span>
                     </div>
                     <div class="video-wrapper">
-                        <img id="videoGate" src="/video_feed_gate" alt="Camera Cổng">
+                        <img id="videoGate" src="/video_feed_gate" alt="Gate Camera">
                     </div>
                 </div>
             </div>
@@ -846,21 +846,21 @@
                 <div class="glass-panel" style="display: flex; flex-direction: column; overflow: hidden;">
                     <div style="padding: 8px 12px; border-bottom: 1px solid rgba(0, 198, 255, 0.1); flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 600; color: var(--color-text);">
                         <i data-lucide="log-in" style="width: 14px; height: 14px; color: var(--color-accent);"></i>
-                        Lịch Sử Ra / Vào
+                        Entry / Exit Log
                     </div>
                     <div style="flex: 1; overflow-y: auto; padding: 4px 8px;">
                         <table class="db-table" style="width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>Thời gian</th>
-                                    <th>Biển số</th>
-                                    <th>Hướng</th>
-                                    <th>Ảnh</th>
+                                    <th>Time</th>
+                                    <th>Plate</th>
+                                    <th>Direction</th>
+                                    <th>Image</th>
                                 </tr>
                             </thead>
                             <tbody id="gateLogsBody">
                                 <tr>
-                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Đang tải...</td>
+                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -871,21 +871,21 @@
                 <div class="glass-panel" style="display: flex; flex-direction: column; overflow: hidden;">
                     <div style="padding: 8px 12px; border-bottom: 1px solid rgba(0, 198, 255, 0.1); flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-family: 'Fira Code', monospace; font-size: 0.72rem; font-weight: 600; color: var(--color-text);">
                         <i data-lucide="triangle-alert" style="width: 14px; height: 14px; color: var(--color-warning);"></i>
-                        Lịch Sử Đậu Sai
+                        Improper Parking Log
                     </div>
                     <div style="flex: 1; overflow-y: auto; padding: 4px 8px;">
                         <table class="db-table" style="width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>Thời gian</th>
-                                    <th>Biển số</th>
-                                    <th>Loại</th>
-                                    <th>Ảnh</th>
+                                    <th>Time</th>
+                                    <th>Plate</th>
+                                    <th>Type</th>
+                                    <th>Image</th>
                                 </tr>
                             </thead>
                             <tbody id="improperLogsBody">
                                 <tr>
-                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Đang tải...</td>
+                                    <td colspan="4" style="text-align:center;color:var(--color-text-muted)">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -901,7 +901,7 @@
                 <div>
                     <div class="chart-panel-title">
                         <i data-lucide="pie-chart"></i>
-                        Phân Tích Trạng Thái
+                        Status Analysis
                     </div>
                     <div class="chart-wrap">
                         <canvas id="parkingChart"></canvas>
@@ -911,21 +911,21 @@
                     <div class="chart-legend-item">
                         <div class="chart-legend-item-left">
                             <span class="chart-legend-dot" style="background:rgba(34,197,94,0.8)"></span>
-                            <span class="chart-legend-label">Đậu đúng</span>
+                            <span class="chart-legend-label">Parked correctly</span>
                         </div>
                         <span class="chart-legend-value" id="legendProperlyParked">0</span>
                     </div>
                     <div class="chart-legend-item">
                         <div class="chart-legend-item-left">
                             <span class="chart-legend-dot" style="background:rgba(245,158,11,0.8)"></span>
-                            <span class="chart-legend-label">Đậu lấn ô</span>
+                            <span class="chart-legend-label">Overlapping</span>
                         </div>
                         <span class="chart-legend-value" id="legendOverlapping">0</span>
                     </div>
                     <div class="chart-legend-item">
                         <div class="chart-legend-item-left">
                             <span class="chart-legend-dot" style="background:rgba(0,198,255,0.8)"></span>
-                            <span class="chart-legend-label">Khả dụng</span>
+                            <span class="chart-legend-label">Available</span>
                         </div>
                         <span class="chart-legend-value" id="legendAvailable">0</span>
                     </div>
@@ -937,16 +937,16 @@
                 <div class="slot-panel-header">
                     <div class="slot-panel-title">
                         <i data-lucide="grid-3x3"></i>
-                        Trạng Thái Slot
+                        Slot Status
                     </div>
                     <div class="slot-legend">
                         <div class="slot-legend-item">
                             <span class="slot-legend-dot" style="background:var(--color-accent)"></span>
-                            Trống
+                            Empty
                         </div>
                         <div class="slot-legend-item">
                             <span class="slot-legend-dot" style="background:#3b82f6"></span>
-                            Đã đặt
+                            Reserved
                         </div>
                         <div class="slot-legend-item">
                             <span class="slot-legend-dot" style="background:#eab308"></span>
@@ -954,11 +954,11 @@
                         </div>
                         <div class="slot-legend-item">
                             <span class="slot-legend-dot" style="background:var(--color-warning)"></span>
-                            Có xe
+                            Occupied
                         </div>
                         <div class="slot-legend-item">
                             <span class="slot-legend-dot" style="background:var(--color-danger)"></span>
-                            Bị chiếm
+                            Hijacked
                         </div>
                     </div>
                 </div>
@@ -1049,7 +1049,7 @@
         var parkingChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Đậu Đúng', 'Đậu Lấn Ô', 'Khả Dụng'],
+                labels: ['Parked Correctly', 'Overlapping', 'Available'],
                 datasets: [{
                     data: [0, 0, 0],
                     backgroundColor: [
@@ -1093,7 +1093,7 @@
                     if (logs.error) return;
                     var tbody = document.getElementById('gateLogsBody');
                     if (!logs.length) {
-                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">Chưa có dữ liệu</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">No data yet</td></tr>';
                         return;
                     }
                     tbody.innerHTML = logs.map(function (log) {
@@ -1105,8 +1105,8 @@
                             String(ts.getMinutes()).padStart(2, '0') + ':' +
                             String(ts.getSeconds()).padStart(2, '0') : '---';
                         var dirBadge = log.direction === 'IN'
-                            ? '<span class="badge badge-in">VÀO</span>'
-                            : '<span class="badge badge-out">RA</span>';
+                            ? '<span class="badge badge-in">IN</span>'
+                            : '<span class="badge badge-out">OUT</span>';
                         var imgCell = log.image_path
                             ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path + '" style="height:28px;border-radius:3px;border:1px solid rgba(0,198,255,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
                             : '&mdash;';
@@ -1136,33 +1136,33 @@
                         // Priority: Hijacked > Occupied > VIP > Reserved > Empty
                         if (s.is_hijacked) {
                             cls += ' hijacked';
-                            statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">Bị chiếm</span>';
-                            tooltip = 'Cảnh báo: Slot đã đặt nhưng xe khác đậu. ' + (s.reservation ? 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '');
+                            statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">Hijacked</span>';
+                            tooltip = 'Warning: Reserved slot but another vehicle parked. ' + (s.reservation ? 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') : '');
                         } else if (s.status === 'occupied') {
                             cls += ' occupied';
-                            statusBadge = '<span class="badge badge-occupied">Có xe</span>';
+                            statusBadge = '<span class="badge badge-occupied">Occupied</span>';
                             if (s.reservation) {
-                                tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                                tooltip = 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
                             } else if (s.plate) {
-                                tooltip = 'Biển số: ' + s.plate;
+                                tooltip = 'Plate: ' + s.plate;
                             }
                         } else if (s.is_vip) {
                             // VIP slot - show as VIP (yellow) even if reserved
                             cls += ' vip';
                             statusBadge = '<span class="badge" style="background:rgba(234,179,8,0.2);color:#eab308;">VIP</span>';
                             if (s.reservation) {
-                                tooltip = 'Slot VIP - Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                                tooltip = 'VIP Slot - Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
                             } else {
-                                tooltip = 'Slot VIP - Chỉ quản lý đặt được';
+                                tooltip = 'VIP Slot - Only managers can reserve';
                             }
                         } else if (s.reservation) {
                             // Regular slot with reservation
                             cls += ' reserved';
-                            statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;">Đã đặt</span>';
-                            tooltip = 'Đặt bởi: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
+                            statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;">Reserved</span>';
+                            tooltip = 'Reserved by: ' + (s.reservation.user_full_name || '') + ', ' + (s.reservation.plate_text || '') + ', ' + (s.reservation.time_from || '') + '-' + (s.reservation.time_to || '');
                         } else {
                             // Empty slot - show as AVAILABLE
-                            statusBadge = '<span class="badge badge-free">Trống</span>';
+                            statusBadge = '<span class="badge badge-free">Empty</span>';
                         }
                         var plate = s.plate ? s.plate : '—';
                         return '<div class="' + cls + '" title="' + (tooltip || '').replace(/"/g, '&quot;') + '">' +
@@ -1182,7 +1182,7 @@
                     if (logs.error) return;
                     var tbody = document.getElementById('improperLogsBody');
                     if (!logs.length) {
-                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">Chưa có dữ liệu</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">No data yet</td></tr>';
                         return;
                     }
                     tbody.innerHTML = logs.map(function (log) {
@@ -1194,8 +1194,8 @@
                             String(ts.getMinutes()).padStart(2, '0') + ':' +
                             String(ts.getSeconds()).padStart(2, '0') : '---';
                         var badge = log.event_type === 'outside'
-                            ? '<span class="badge badge-out">Ngoài slot</span>'
-                            : '<span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">Lấn ô</span>';
+                            ? '<span class="badge badge-out">Outside</span>'
+                            : '<span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">Overlapping</span>';
                         var imgCell = log.image_path
                             ? '<a href="' + log.image_path + '" target="_blank"><img src="' + log.image_path + '" style="height:28px;border-radius:3px;border:1px solid rgba(0,198,255,0.2);cursor:pointer;" onerror="this.parentNode.innerHTML=\'&mdash;\'"></a>'
                             : '&mdash;';

@@ -1,0 +1,105 @@
+{
+  "parking_state": {
+    "available": {
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1": 100.0,
+      "support": 375,
+      "tp": 375,
+      "fp": 0,
+      "fn": 0
+    },
+    "occupied": {
+      "precision": 100.0,
+      "recall": 99.8,
+      "f1": 99.9,
+      "support": 1519,
+      "tp": 1516,
+      "fp": 0,
+      "fn": 3
+    },
+    "overlapping": {
+      "precision": 66.7,
+      "recall": 100.0,
+      "f1": 80.0,
+      "support": 6,
+      "tp": 6,
+      "fp": 3,
+      "fn": 0
+    },
+    "_overall": {
+      "accuracy": 99.8,
+      "macro_precision": 88.9,
+      "macro_recall": 99.9,
+      "macro_f1": 93.3,
+      "total": 1900
+    }
+  },
+  "confusion_matrix": {
+    "classes": [
+      "available",
+      "occupied",
+      "overlapping"
+    ],
+    "matrix": [
+      [
+        375,
+        0,
+        0
+      ],
+      [
+        0,
+        1516,
+        3
+      ],
+      [
+        0,
+        0,
+        6
+      ]
+    ]
+  },
+  "free_slots": {
+    "accuracy": 100.0,
+    "precision": 100.0,
+    "recall": 100.0,
+    "f1": 100.0,
+    "support": 375,
+    "tp": 375,
+    "fp": 0,
+    "fn": 0
+  },
+  "occupied_slots": {
+    "accuracy": 99.8,
+    "precision": 100.0,
+    "recall": 99.8,
+    "f1": 99.9,
+    "support": 1519,
+    "tp": 1516,
+    "fp": 0,
+    "fn": 3
+  },
+  "wrong_parking": {
+    "gt_total": 6,
+    "detected": 6,
+    "missed": 0,
+    "fp": 3,
+    "recall": 100.0,
+    "accuracy": 66.7
+  },
+  "outside_vehicles": {
+    "tp": 190,
+    "fp": 28,
+    "fn": 19,
+    "precision": 87.2,
+    "recall": 90.9,
+    "f1": 89.0
+  },
+  "flickering_rate": 1.58,
+  "flickering_transitions": 30,
+  "stability_score": 99.84,
+  "yolo_confidence": 0.3,
+  "iou_threshold": 0.3,
+  "fps": 30.0,
+  "frames_evaluated": 100
+}

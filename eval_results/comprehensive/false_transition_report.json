@@ -1,0 +1,13 @@
+{
+  "total_transitions": 0,
+  "false_transitions": 0,
+  "false_transition_rate_pct": 0.0,
+  "false_trans_per_second": 0.0,
+  "false_trans_per_minute": 0.0,
+  "false_trans_per_hour": 0.0,
+  "video_duration_sec": 1378.77,
+  "video_total_frames": 41363,
+  "frames_sampled": 41363,
+  "hysteresis_threshold": 45,
+  "transition_log": []
+}

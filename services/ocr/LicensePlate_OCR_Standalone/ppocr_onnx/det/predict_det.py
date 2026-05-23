@@ -25,8 +25,15 @@ class TextDetector:
             PickKeys('image', 'shape')
         )
         self.postprocess_op = DBPostProcess(thresh=0.3)
-        so = ort.SessionOptions()
-        so.log_severity_level = 3
+        # Use shared thread-capped SessionOptions so ONNX does not oversubscribe CPU
+        try:
+            from shared.runtime_limits import get_onnx_session_options
+            so = get_onnx_session_options()
+        except Exception:
+            so = None
+        if so is None:
+            so = ort.SessionOptions()
+            so.log_severity_level = 3
         # Prefer GPU; fallback to CPU if CUDA not available
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         sess = ort.InferenceSession(model_path, so, providers=providers)

@@ -1,0 +1,5 @@
+mode,precision,recall,f1,tp,fp,fn,support
+Hyst_OFF_Inner_OFF,86.39,88.15,87.27,1905,300,256,2161
+Hyst_OFF_Inner_ON,86.39,88.15,87.27,1905,300,256,2161
+Hyst_ON_Inner_OFF,86.39,88.15,87.27,1905,300,256,2161
+Hyst_ON_Inner_ON,86.39,88.15,87.27,1905,300,256,2161

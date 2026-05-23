@@ -1,0 +1,7 @@
+metric,value
+TP,1372.0
+FP,469.0
+FN,355.0
+Precision,74.5
+Recall,79.4
+F1-Score,76.9

@@ -1,0 +1,247 @@
+{
+  "config": {
+    "video": "C:\\Users\\maous\\Downloads\\server_dasboard-master\\server_dasboard-master\\static\\video\\CAM_PARKING.mp4",
+    "hysteresis_threshold": 45,
+    "fps": 30.0,
+    "video_range": "6-41319"
+  },
+  "section_e": {
+    "ON_ON": {
+      "gt_transitions": 49,
+      "pred_transitions": 88,
+      "matched_transitions": 17,
+      "match_pct": 34.69,
+      "min_frames": 1021,
+      "max_frames": 36905,
+      "mean_frames": 10492.0,
+      "median_frames": 9666.0,
+      "std_frames": 9092.73,
+      "p95_frames": 26668,
+      "p99_frames": 34857,
+      "min_sec": 34.033,
+      "max_sec": 1230.167,
+      "mean_sec": 349.733,
+      "median_sec": 322.2,
+      "p95_sec": 888.967,
+      "p99_sec": 1161.927,
+      "latency_by_transition": {
+        "overlapping -> occupied": {
+          "count": 4,
+          "mean_frames": 5296.25,
+          "median_frames": 4569.5,
+          "min_frames": 1686,
+          "max_frames": 10360
+        },
+        "available -> occupied": {
+          "count": 7,
+          "mean_frames": 13260.43,
+          "median_frames": 9723.0,
+          "min_frames": 1129,
+          "max_frames": 36905
+        },
+        "occupied -> available": {
+          "count": 2,
+          "mean_frames": 5343.5,
+          "median_frames": 5343.5,
+          "min_frames": 1021,
+          "max_frames": 9666
+        },
+        "available -> overlapping": {
+          "count": 2,
+          "mean_frames": 16547.0,
+          "median_frames": 16547.0,
+          "min_frames": 16047,
+          "max_frames": 17047
+        },
+        "overlapping -> available": {
+          "count": 2,
+          "mean_frames": 10287.5,
+          "median_frames": 10287.5,
+          "min_frames": 7737,
+          "max_frames": 12838
+        }
+      },
+      "latency_by_slot": {
+        "1": {
+          "count": 2,
+          "mean_frames": 1828.5,
+          "median_frames": 1828.5
+        },
+        "2": {
+          "count": 8,
+          "mean_frames": 8692.25,
+          "median_frames": 8701.5
+        },
+        "3": {
+          "count": 1,
+          "mean_frames": 24110.0,
+          "median_frames": 24110.0
+        },
+        "9": {
+          "count": 1,
+          "mean_frames": 12469.0,
+          "median_frames": 12469.0
+        },
+        "14": {
+          "count": 1,
+          "mean_frames": 36905.0,
+          "median_frames": 36905.0
+        },
+        "15": {
+          "count": 3,
+          "mean_frames": 8276.33,
+          "median_frames": 10360.0
+        },
+        "16": {
+          "count": 1,
+          "mean_frames": 6856.0,
+          "median_frames": 6856.0
+        }
+      },
+      "latency_distribution": {
+        "0-30": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "30-60": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "60-90": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "90-180": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "180-300": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "300+": {
+          "count": 17,
+          "pct": 100.0
+        }
+      },
+      "below_threshold_pct": 0.0,
+      "hysteresis_threshold": 45,
+      "fps": 30.0
+    },
+    "ON_OFF": {
+      "gt_transitions": 49,
+      "pred_transitions": 82,
+      "matched_transitions": 15,
+      "match_pct": 30.61,
+      "min_frames": 1021,
+      "max_frames": 36905,
+      "mean_frames": 9692.8,
+      "median_frames": 7782.0,
+      "std_frames": 9387.75,
+      "p95_frames": 27948,
+      "p99_frames": 35113,
+      "min_sec": 34.033,
+      "max_sec": 1230.167,
+      "mean_sec": 323.093,
+      "median_sec": 259.4,
+      "p95_sec": 931.617,
+      "p99_sec": 1170.457,
+      "latency_by_transition": {
+        "overlapping -> occupied": {
+          "count": 4,
+          "mean_frames": 5296.25,
+          "median_frames": 4569.5,
+          "min_frames": 1686,
+          "max_frames": 10360
+        },
+        "available -> occupied": {
+          "count": 7,
+          "mean_frames": 13260.43,
+          "median_frames": 9723.0,
+          "min_frames": 1129,
+          "max_frames": 36905
+        },
+        "occupied -> available": {
+          "count": 2,
+          "mean_frames": 5366.0,
+          "median_frames": 5366.0,
+          "min_frames": 1021,
+          "max_frames": 9711
+        },
+        "overlapping -> available": {
+          "count": 2,
+          "mean_frames": 10326.0,
+          "median_frames": 10326.0,
+          "min_frames": 7782,
+          "max_frames": 12870
+        }
+      },
+      "latency_by_slot": {
+        "1": {
+          "count": 2,
+          "mean_frames": 1828.5,
+          "median_frames": 1828.5
+        },
+        "2": {
+          "count": 6,
+          "mean_frames": 6089.0,
+          "median_frames": 7475.0
+        },
+        "3": {
+          "count": 1,
+          "mean_frames": 24110.0,
+          "median_frames": 24110.0
+        },
+        "9": {
+          "count": 1,
+          "mean_frames": 12469.0,
+          "median_frames": 12469.0
+        },
+        "14": {
+          "count": 1,
+          "mean_frames": 36905.0,
+          "median_frames": 36905.0
+        },
+        "15": {
+          "count": 3,
+          "mean_frames": 8287.0,
+          "median_frames": 10360.0
+        },
+        "16": {
+          "count": 1,
+          "mean_frames": 6856.0,
+          "median_frames": 6856.0
+        }
+      },
+      "latency_distribution": {
+        "0-30": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "30-60": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "60-90": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "90-180": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "180-300": {
+          "count": 0,
+          "pct": 0.0
+        },
+        "300+": {
+          "count": 15,
+          "pct": 100.0
+        }
+      },
+      "below_threshold_pct": 0.0,
+      "hysteresis_threshold": 45,
+      "fps": 30.0
+    }
+  }
+}

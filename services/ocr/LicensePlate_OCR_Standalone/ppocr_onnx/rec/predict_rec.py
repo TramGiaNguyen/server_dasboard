@@ -12,8 +12,15 @@ class TextRecognizer:
         self.rec_image_shape = [3, 48, 320]
         self.rec_batch_num = 6
         self.postprocess_op = CTCLabelDecode(character_dict=self.get_character_dict(dict_path))
-        so = ort.SessionOptions()
-        so.log_severity_level = 3
+        # Use shared thread-capped SessionOptions so ONNX does not oversubscribe CPU
+        try:
+            from shared.runtime_limits import get_onnx_session_options
+            so = get_onnx_session_options()
+        except Exception:
+            so = None
+        if so is None:
+            so = ort.SessionOptions()
+            so.log_severity_level = 3
         # Prefer GPU; fallback to CPU if CUDA not available
         providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
         sess = ort.InferenceSession(model_path, so, providers=providers)
